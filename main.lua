@@ -37,6 +37,7 @@ end
 
 function love.textinput(text)
     current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)
+    editor.update_viewport(current_editor, current_buffer)
 end
 
 function love.keypressed(key)
@@ -51,6 +52,7 @@ function love.keypressed(key)
         buffer.split_line(current_buffer, current_editor.cursor_line, current_editor.cursor_col)
         current_editor.cursor_line = current_editor.cursor_line + 1
         current_editor.cursor_col = 0
+        editor.update_viewport(current_editor, current_buffer)
         
     elseif key == "backspace" then
         if current_editor.cursor_col > 0 then
@@ -60,6 +62,7 @@ function love.keypressed(key)
             current_editor.cursor_col = buffer.join_lines(current_buffer, current_editor.cursor_line)
             current_editor.cursor_line = current_editor.cursor_line - 1
         end
+        editor.update_viewport(current_editor, current_buffer)
         
     elseif key == "left" then
         editor.move_cursor_left(current_editor, current_buffer)
@@ -69,6 +72,18 @@ function love.keypressed(key)
         editor.move_cursor_up(current_editor, current_buffer)
     elseif key == "down" then
         editor.move_cursor_down(current_editor, current_buffer)
+    elseif key == "pageup" then
+        editor.page_up(current_editor, current_buffer)
+    elseif key == "pagedown" then
+        editor.page_down(current_editor, current_buffer)
+    end
+end
+
+function love.wheelmoved(x, y)
+    if y > 0 then
+        editor.scroll_up(current_editor, current_buffer, 3)
+    elseif y < 0 then
+        editor.scroll_down(current_editor, current_buffer, 3)
     end
 end
 
@@ -91,18 +106,31 @@ function love.draw()
     
     local font = love.graphics.getFont()
     local line_height = font:getHeight()
+    local content_start_y = 40
     
     love.graphics.setColor(1, 1, 1)
     
-    for i, line in ipairs(current_buffer.lines) do
-        local y = 40 + (i - 1) * line_height
+    local visible_lines = editor.get_visible_line_count()
+    local end_line = math.min(#current_buffer.lines, current_editor.viewport.top_line + visible_lines - 1)
+    
+    for i = current_editor.viewport.top_line, end_line do
+        local line = current_buffer.lines[i]
+        local y = content_start_y + (i - current_editor.viewport.top_line) * line_height
         love.graphics.print(line, 10, y)
     end
     
-    local cursor_y = 40 + (current_editor.cursor_line - 1) * line_height
-    local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
-    local cursor_x = 10 + font:getWidth(cursor_text)
-    love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
+    if current_editor.cursor_line >= current_editor.viewport.top_line and 
+       current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
+        local cursor_y = content_start_y + (current_editor.cursor_line - current_editor.viewport.top_line) * line_height
+        local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
+        local cursor_x = 10 + font:getWidth(cursor_text)
+        love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
+    end
+    
+    love.graphics.setColor(0.6, 0.6, 0.6)
+    love.graphics.print(string.format("Line %d/%d (showing %d-%d)", 
+        current_editor.cursor_line, #current_buffer.lines,
+        current_editor.viewport.top_line, end_line), 10, love.graphics.getHeight() - 20)
 end
 
 function love.quit()
