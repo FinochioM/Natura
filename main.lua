@@ -44,6 +44,29 @@ function love.keypressed(key)
                     end
                     spotlight.close()
                 end
+            elseif spotlight.current_action == "Open Global File" then
+                local selected = spotlight.get_selected_item()
+                if selected then
+                    if selected == "../" then
+                        spotlight.go_back()
+                    elseif selected:match("/$") then
+                        local dir_name = selected:sub(1, -2)
+                        local full_path = spotlight.current_path == "" and dir_name or (spotlight.current_path .. "/" .. dir_name)
+                        spotlight.navigate_to_directory(full_path)
+                    else
+                        local full_path = spotlight.get_selected_full_path()
+                        print("Opening global file:", full_path)
+                        -- TODO: Load file content
+                        spotlight.close()
+                    end
+                end
+            elseif spotlight.current_action == "Open Project File" then
+                local selected = spotlight.get_selected_item()
+                if selected then
+                    print("Opening project file:", selected)
+                    -- TODO: Load file content
+                    spotlight.close()
+                end
             end
             return
         elseif key == "up" then
@@ -73,6 +96,24 @@ function love.keypressed(key)
                 table.insert(project_names, project.get_project_name(proj))
             end
             spotlight.set_items(project_names)
+            return
+        elseif key == "p" and (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) and not (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) then
+            if project.get_current_project() then
+                spotlight.open("Open Project File")
+                local files = workspace.get_files()
+                local file_names = {}
+                for _, file in ipairs(files) do
+                    table.insert(file_names, file.relative_path or file.name)
+                end
+                spotlight.set_items(file_names)
+            else
+                print("No project open")
+            end
+            return
+        elseif key == "p" and (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) and (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) then
+            spotlight.open("Open Global File")
+            local drives = love.filesystem.getDirectoryItems("")
+            spotlight.set_items(drives)
             return
         end
     end
