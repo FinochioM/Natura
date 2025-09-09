@@ -1,14 +1,76 @@
+local project = require("project")
+local spotlight = require("spotlight")
+
 local lines = {""}
 local cursor_line = 1
 local cursor_col = 0
+local available_projects = {}
+local current_project = nil
 
 function love.textinput(t)
+        if spotlight.is_open then
+        spotlight.handle_input(t)
+        if spotlight.current_action == "Open Project" then
+            local filtered = {}
+            for _, proj in ipairs(available_projects) do
+                if proj:lower():find(spotlight.search_text:lower(), 1, true) then
+                    table.insert(filtered, project.get_project_name(proj))
+                end
+            end
+            spotlight.set_items(filtered)
+        end
+        return
+    end
     local line = lines[cursor_line]
     lines[cursor_line] = line:sub(1, cursor_col) .. t .. line:sub(cursor_col + 1)
     cursor_col = cursor_col + 1
 end
 
 function love.keypressed(key)
+    if spotlight.is_open then
+        if key == "escape" then
+            spotlight.close()
+            return
+        elseif key == "return" then
+            if spotlight.current_action == "Open Project" then
+                local selected = spotlight.get_selected_item()
+                if selected then
+                    -- TODO: Actually open the project
+                    print("Opening project:", selected)
+                    spotlight.close()
+                end
+            end
+            return
+        elseif key == "up" then
+            spotlight.move_selection(-1)
+            return
+        elseif key == "down" then
+            spotlight.move_selection(1)
+            return
+        elseif key == "backspace" then
+            spotlight.handle_backspace()
+            if spotlight.current_action == "Open Project" then
+                local filtered = {}
+                for _, proj in ipairs(available_projects) do
+                    if proj:lower():find(spotlight.search_text:lower(), 1, true) then
+                        table.insert(filtered, project.get_project_name(proj))
+                    end
+                end
+                spotlight.set_items(filtered)
+            end
+            return
+        end
+    else
+        if key == "x" and (love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt")) then
+            spotlight.open("Open Project")
+            local project_names = {}
+            for _, proj in ipairs(available_projects) do
+                table.insert(project_names, project.get_project_name(proj))
+            end
+            spotlight.set_items(project_names)
+            return
+        end
+    end
     if key == "backspace" then
         if cursor_col > 0 then
             local line = lines[cursor_line]
@@ -44,6 +106,8 @@ end
 function love.load()
     love.window.setTitle("Natura Editor")
     love.window.setMode(800, 600)
+    
+    available_projects = project.scan_projects()
 end
 
 function love.draw()    
@@ -55,4 +119,6 @@ function love.draw()
     local cursor_x = 10 + font:getWidth(text_before_cursor)
     local cursor_y = 30 + cursor_line * 20
     love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + font:getHeight())
+    
+    spotlight.draw()
 end
