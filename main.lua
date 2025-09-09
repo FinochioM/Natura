@@ -1,6 +1,7 @@
 local love = require("love")
 local buffer = require("buffer")
 local editor = require("editor")
+local keymap = require("keymap")
 
 local current_buffer
 local current_editor
@@ -41,41 +42,8 @@ function love.textinput(text)
 end
 
 function love.keypressed(key)
-    if (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) then
-        if key == "s" then
-            buffer.save_file(current_buffer)
-            return
-        end
-    end
-    
-    if key == "return" then
-        buffer.split_line(current_buffer, current_editor.cursor_line, current_editor.cursor_col)
-        current_editor.cursor_line = current_editor.cursor_line + 1
-        current_editor.cursor_col = 0
-        editor.update_viewport(current_editor, current_buffer)
-        
-    elseif key == "backspace" then
-        if current_editor.cursor_col > 0 then
-            buffer.delete_char(current_buffer, current_editor.cursor_line, current_editor.cursor_col)
-            current_editor.cursor_col = current_editor.cursor_col - 1
-        elseif current_editor.cursor_line > 1 then
-            current_editor.cursor_col = buffer.join_lines(current_buffer, current_editor.cursor_line)
-            current_editor.cursor_line = current_editor.cursor_line - 1
-        end
-        editor.update_viewport(current_editor, current_buffer)
-        
-    elseif key == "left" then
-        editor.move_cursor_left(current_editor, current_buffer)
-    elseif key == "right" then
-        editor.move_cursor_right(current_editor, current_buffer)
-    elseif key == "up" then
-        editor.move_cursor_up(current_editor, current_buffer)
-    elseif key == "down" then
-        editor.move_cursor_down(current_editor, current_buffer)
-    elseif key == "pageup" then
-        editor.page_up(current_editor, current_buffer)
-    elseif key == "pagedown" then
-        editor.page_down(current_editor, current_buffer)
+    if not keymap.handle_key(key, current_editor, current_buffer) then
+        print("Unhandled key: " .. key)
     end
 end
 

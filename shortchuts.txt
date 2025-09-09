@@ -1,0 +1,7 @@
+Ctrl+C/V/X: Copy a line, paste a line, cut a line.
+Ctrl+A - Not implemented
+Home/End: Line start/end
+Ctrl+Home/End: File start/end
+Ctrl+Left/Right: Word jumping
+Ctrl+K: Delete to end
+Ctrl+U: Delete to start
