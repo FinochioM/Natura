@@ -35,8 +35,13 @@ function love.keypressed(key)
             if spotlight.current_action == "Open Project" then
                 local selected = spotlight.get_selected_item()
                 if selected then
-                    -- TODO: Actually open the project
-                    print("Opening project:", selected)
+                    local filename = selected .. ".natura"
+                    if project.open_project(filename) then
+                        print("Opened project:", selected)
+                        love.window.setTitle("Natura Editor - " .. selected)
+                    else
+                        print("Failed to open project:", selected)
+                    end
                     spotlight.close()
                 end
             end
