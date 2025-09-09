@@ -1,5 +1,6 @@
 local project = require("project")
 local spotlight = require("spotlight")
+local workspace = require("workspace")
 
 local lines = {""}
 local cursor_line = 1
@@ -112,8 +113,7 @@ function love.keypressed(key)
             return
         elseif key == "p" and (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) and (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) then
             spotlight.open("Open Global File")
-            local drives = love.filesystem.getDirectoryItems("")
-            spotlight.set_items(drives)
+            spotlight.navigate_to_directory("")
             return
         end
     end
