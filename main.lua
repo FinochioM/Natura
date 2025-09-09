@@ -1,76 +1,9 @@
 local love = require("love")
+local buffer = require("buffer")
+local editor = require("editor")
 
-local buffer = {
-    lines = {""},
-    cursor_line = 1,
-    cursor_col = 0,
-    filepath = nil,
-    dirty = false
-}
-
-local function load_file(filepath)
-    print("Attempting to load: " .. filepath)
-    
-    local info = love.filesystem.getInfo(filepath)
-    if not info then
-        print("Error: File does not exist: " .. filepath)
-        return false
-    end
-    
-    local content, error = love.filesystem.read(filepath)
-    if not content then
-        print("Error reading file: " .. (error or "unknown error"))
-        return false
-    end
-    
-    buffer.lines = {}
-    for line in content:gmatch("([^\n]*)\n?") do
-        if line ~= "" or #buffer.lines == 0 then
-            table.insert(buffer.lines, line)
-        end
-    end
-    
-    if #buffer.lines == 0 then
-        buffer.lines = {""}
-    end
-    
-    buffer.filepath = filepath
-    buffer.dirty = false
-    buffer.cursor_line = 1
-    buffer.cursor_col = 0
-    
-    print("Successfully loaded: " .. filepath)
-    return true
-end
-
-local function save_file()
-    if not buffer.filepath then
-        print("No filepath set")
-        return false
-    end
-    
-    local content = ""
-    for i, line in ipairs(buffer.lines) do
-        content = content .. line
-        if i < #buffer.lines then
-            content = content .. "\n"
-        end
-    end
-    
-    local success, error = love.filesystem.write(buffer.filepath, content)
-    if not success then
-        print("Error saving file: " .. (error or "unknown error"))
-        return false
-    end
-    
-    buffer.dirty = false
-    print("Saved: " .. buffer.filepath)
-    return true
-end
-
-local function mark_dirty()
-    buffer.dirty = true
-end
+local current_buffer
+local current_editor
 
 function love.load(args)
     love.window.setTitle("Natura Editor")
@@ -82,14 +15,17 @@ function love.load(args)
     
     love.keyboard.setKeyRepeat(true)
     
+    current_buffer = buffer.create()
+    current_editor = editor.create()
+    
     if args and args[1] then
         local filepath = args[1]
         if love.filesystem.getInfo(filepath) then
-            load_file(filepath)
+            buffer.load_file(current_buffer, filepath)
         else
             local filename = filepath:match("([^/\\]+)$") or filepath
             if love.filesystem.getInfo(filename) then
-                load_file(filename)
+                buffer.load_file(current_buffer, filename)
             else
                 print("Could not find file: " .. filepath)
             end
@@ -100,81 +36,39 @@ function love.load(args)
 end
 
 function love.textinput(text)
-    local line = buffer.lines[buffer.cursor_line]
-    local before = string.sub(line, 1, buffer.cursor_col)
-    local after = string.sub(line, buffer.cursor_col + 1)
-    buffer.lines[buffer.cursor_line] = before .. text .. after
-    buffer.cursor_col = buffer.cursor_col + #text
-    mark_dirty()
+    current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)
 end
 
 function love.keypressed(key)
     if (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) then
         if key == "s" then
-            save_file()
+            buffer.save_file(current_buffer)
             return
         end
     end
     
     if key == "return" then
-        local line = buffer.lines[buffer.cursor_line]
-        local before = string.sub(line, 1, buffer.cursor_col)
-        local after = string.sub(line, buffer.cursor_col + 1)
-        
-        buffer.lines[buffer.cursor_line] = before
-        table.insert(buffer.lines, buffer.cursor_line + 1, after)
-        buffer.cursor_line = buffer.cursor_line + 1
-        buffer.cursor_col = 0
-        mark_dirty()
+        buffer.split_line(current_buffer, current_editor.cursor_line, current_editor.cursor_col)
+        current_editor.cursor_line = current_editor.cursor_line + 1
+        current_editor.cursor_col = 0
         
     elseif key == "backspace" then
-        if buffer.cursor_col > 0 then
-            local line = buffer.lines[buffer.cursor_line]
-            local before = string.sub(line, 1, buffer.cursor_col - 1)
-            local after = string.sub(line, buffer.cursor_col + 1)
-            buffer.lines[buffer.cursor_line] = before .. after
-            buffer.cursor_col = buffer.cursor_col - 1
-            mark_dirty()
-        elseif buffer.cursor_line > 1 then
-            local current_line = buffer.lines[buffer.cursor_line]
-            local prev_line = buffer.lines[buffer.cursor_line - 1]
-            buffer.cursor_col = #prev_line
-            buffer.lines[buffer.cursor_line - 1] = prev_line .. current_line
-            table.remove(buffer.lines, buffer.cursor_line)
-            buffer.cursor_line = buffer.cursor_line - 1
-            mark_dirty()
+        if current_editor.cursor_col > 0 then
+            buffer.delete_char(current_buffer, current_editor.cursor_line, current_editor.cursor_col)
+            current_editor.cursor_col = current_editor.cursor_col - 1
+        elseif current_editor.cursor_line > 1 then
+            current_editor.cursor_col = buffer.join_lines(current_buffer, current_editor.cursor_line)
+            current_editor.cursor_line = current_editor.cursor_line - 1
         end
         
     elseif key == "left" then
-        if buffer.cursor_col > 0 then
-            buffer.cursor_col = buffer.cursor_col - 1
-        elseif buffer.cursor_line > 1 then
-            buffer.cursor_line = buffer.cursor_line - 1
-            buffer.cursor_col = #buffer.lines[buffer.cursor_line]
-        end
-        
+        editor.move_cursor_left(current_editor, current_buffer)
     elseif key == "right" then
-        local line = buffer.lines[buffer.cursor_line]
-        if buffer.cursor_col < #line then
-            buffer.cursor_col = buffer.cursor_col + 1
-        elseif buffer.cursor_line < #buffer.lines then
-            buffer.cursor_line = buffer.cursor_line + 1
-            buffer.cursor_col = 0
-        end
-        
+        editor.move_cursor_right(current_editor, current_buffer)
     elseif key == "up" then
-        if buffer.cursor_line > 1 then
-            buffer.cursor_line = buffer.cursor_line - 1
-            local line = buffer.lines[buffer.cursor_line]
-            buffer.cursor_col = math.min(buffer.cursor_col, #line)
-        end
-        
+        editor.move_cursor_up(current_editor, current_buffer)
     elseif key == "down" then
-        if buffer.cursor_line < #buffer.lines then
-            buffer.cursor_line = buffer.cursor_line + 1
-            local line = buffer.lines[buffer.cursor_line]
-            buffer.cursor_col = math.min(buffer.cursor_col, #line)
-        end
+        editor.move_cursor_down(current_editor, current_buffer)
     end
 end
 
@@ -186,9 +80,9 @@ function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     
     local title = "Natura Editor"
-    if buffer.filepath then
-        title = title .. " - " .. buffer.filepath
-        if buffer.dirty then
+    if current_buffer.filepath then
+        title = title .. " - " .. current_buffer.filepath
+        if current_buffer.dirty then
             title = title .. " *"
         end
     end
@@ -200,13 +94,13 @@ function love.draw()
     
     love.graphics.setColor(1, 1, 1)
     
-    for i, line in ipairs(buffer.lines) do
+    for i, line in ipairs(current_buffer.lines) do
         local y = 40 + (i - 1) * line_height
         love.graphics.print(line, 10, y)
     end
     
-    local cursor_y = 40 + (buffer.cursor_line - 1) * line_height
-    local cursor_text = string.sub(buffer.lines[buffer.cursor_line], 1, buffer.cursor_col)
+    local cursor_y = 40 + (current_editor.cursor_line - 1) * line_height
+    local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
     local cursor_x = 10 + font:getWidth(cursor_text)
     love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
 end
