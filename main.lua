@@ -6,6 +6,8 @@ local save_message = ""
 local save_timer = 0
 local spotlight_active = false
 local spotlight_text = ""
+local project_root = nil
+local project_name = "No Project"
 
 function love.textinput(t)
     if spotlight_active then
@@ -75,6 +77,7 @@ end
 function love.load()
     love.window.setTitle("Natura Editor")
     love.window.setMode(800, 600)
+    find_project_root()
 end
 
 function love.update(dt)
@@ -87,7 +90,7 @@ function love.update(dt)
 end
 
 function love.draw()
-    love.graphics.print("Natura Editor - " .. filename .. " (Ctrl+S to save)", 10, 10)
+    love.graphics.print("Natura Editor - " .. project_name .. " - " .. filename .. " (Ctrl+S to save)", 10, 10)
     
     if save_message ~= "" then
         love.graphics.print(save_message, 10, 550)
@@ -110,4 +113,19 @@ function love.draw()
     local cursor_x = 10 + font:getWidth(text_before_cursor)
     local cursor_y = 30 + cursor_line * 20
     love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + font:getHeight())
+    love.graphics.print(project_root or "No project root found", 10, 570)
+end
+
+function find_project_root()
+    local current_dir = love.filesystem.getWorkingDirectory()
+    
+    if love.filesystem.getInfo(".natura-config") then
+        project_root = current_dir
+        project_name = "Current Project"
+        return true
+    end
+
+    project_root = nil
+    project_name = "No Project"
+    return false
 end
