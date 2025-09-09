@@ -4,9 +4,75 @@ local buffer = {
     lines = {""},
     cursor_line = 1,
     cursor_col = 0,
+    filepath = nil,
+    dirty = false
 }
 
-function love.load()
+local function load_file(filepath)
+    print("Attempting to load: " .. filepath)
+    
+    local info = love.filesystem.getInfo(filepath)
+    if not info then
+        print("Error: File does not exist: " .. filepath)
+        return false
+    end
+    
+    local content, error = love.filesystem.read(filepath)
+    if not content then
+        print("Error reading file: " .. (error or "unknown error"))
+        return false
+    end
+    
+    buffer.lines = {}
+    for line in content:gmatch("([^\n]*)\n?") do
+        if line ~= "" or #buffer.lines == 0 then
+            table.insert(buffer.lines, line)
+        end
+    end
+    
+    if #buffer.lines == 0 then
+        buffer.lines = {""}
+    end
+    
+    buffer.filepath = filepath
+    buffer.dirty = false
+    buffer.cursor_line = 1
+    buffer.cursor_col = 0
+    
+    print("Successfully loaded: " .. filepath)
+    return true
+end
+
+local function save_file()
+    if not buffer.filepath then
+        print("No filepath set")
+        return false
+    end
+    
+    local content = ""
+    for i, line in ipairs(buffer.lines) do
+        content = content .. line
+        if i < #buffer.lines then
+            content = content .. "\n"
+        end
+    end
+    
+    local success, error = love.filesystem.write(buffer.filepath, content)
+    if not success then
+        print("Error saving file: " .. (error or "unknown error"))
+        return false
+    end
+    
+    buffer.dirty = false
+    print("Saved: " .. buffer.filepath)
+    return true
+end
+
+local function mark_dirty()
+    buffer.dirty = true
+end
+
+function love.load(args)
     love.window.setTitle("Natura Editor")
     love.window.setMode(800, 600, {
         resizable = true,
@@ -15,6 +81,21 @@ function love.load()
     })
     
     love.keyboard.setKeyRepeat(true)
+    
+    if args and args[1] then
+        local filepath = args[1]
+        if love.filesystem.getInfo(filepath) then
+            load_file(filepath)
+        else
+            local filename = filepath:match("([^/\\]+)$") or filepath
+            if love.filesystem.getInfo(filename) then
+                load_file(filename)
+            else
+                print("Could not find file: " .. filepath)
+            end
+        end
+    end
+    
     print("Natura Editor starting...")
 end
 
@@ -24,9 +105,17 @@ function love.textinput(text)
     local after = string.sub(line, buffer.cursor_col + 1)
     buffer.lines[buffer.cursor_line] = before .. text .. after
     buffer.cursor_col = buffer.cursor_col + #text
+    mark_dirty()
 end
 
 function love.keypressed(key)
+    if (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) then
+        if key == "s" then
+            save_file()
+            return
+        end
+    end
+    
     if key == "return" then
         local line = buffer.lines[buffer.cursor_line]
         local before = string.sub(line, 1, buffer.cursor_col)
@@ -36,6 +125,7 @@ function love.keypressed(key)
         table.insert(buffer.lines, buffer.cursor_line + 1, after)
         buffer.cursor_line = buffer.cursor_line + 1
         buffer.cursor_col = 0
+        mark_dirty()
         
     elseif key == "backspace" then
         if buffer.cursor_col > 0 then
@@ -44,6 +134,7 @@ function love.keypressed(key)
             local after = string.sub(line, buffer.cursor_col + 1)
             buffer.lines[buffer.cursor_line] = before .. after
             buffer.cursor_col = buffer.cursor_col - 1
+            mark_dirty()
         elseif buffer.cursor_line > 1 then
             local current_line = buffer.lines[buffer.cursor_line]
             local prev_line = buffer.lines[buffer.cursor_line - 1]
@@ -51,6 +142,7 @@ function love.keypressed(key)
             buffer.lines[buffer.cursor_line - 1] = prev_line .. current_line
             table.remove(buffer.lines, buffer.cursor_line)
             buffer.cursor_line = buffer.cursor_line - 1
+            mark_dirty()
         end
         
     elseif key == "left" then
@@ -91,8 +183,17 @@ function love.update(dt)
 end
 
 function love.draw()
+    love.graphics.clear(0.1, 0.1, 0.1)
+    
+    local title = "Natura Editor"
+    if buffer.filepath then
+        title = title .. " - " .. buffer.filepath
+        if buffer.dirty then
+            title = title .. " *"
+        end
+    end
     love.graphics.setColor(0.8, 0.8, 0.8)
-    love.graphics.print("Natura Editor", 10, 10)
+    love.graphics.print(title, 10, 10)
     
     local font = love.graphics.getFont()
     local line_height = font:getHeight()
