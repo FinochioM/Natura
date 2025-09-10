@@ -171,6 +171,17 @@ local function draw_search_bar(ed)
         search_text = search_text .. " [" .. table.concat(modes, " ") .. "]"
     end
     
+    local font = love.graphics.getFont()
+    local available_width = bar_width - 10
+    local text_width = font:getWidth(search_text)
+    
+    if text_width > available_width then
+        while font:getWidth(search_text .. "...") > available_width and #search_text > 0 do
+            search_text = search_text:sub(1, -2)
+        end
+        search_text = search_text .. "..."
+    end
+    
     love.graphics.print(search_text, bar_x + 5, bar_y + 5)
 end
 
