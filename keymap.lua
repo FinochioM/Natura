@@ -1,5 +1,6 @@
 local keymap = {}
 local actions = require("actions")
+local search = require("search")
 
 local function is_ctrl_pressed()
     return love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")
@@ -13,6 +14,36 @@ function keymap.handle_key(key, ed, buf)
     local shift = is_shift_pressed()
     local ctrl = is_ctrl_pressed()
     
+    if ed.search.active then
+        if key == "escape" then
+            search.close(ed.search)
+            require("editor").clear_selection(ed)
+            return true
+        elseif key == "return" or key == "f3" then
+            if shift then
+                search.goto_previous(ed.search, ed, buf)
+            else
+                search.goto_next(ed.search, ed, buf)
+            end
+            return true
+        elseif key == "backspace" then
+            if #ed.search.query > 0 then
+                ed.search.query = ed.search.query:sub(1, -2)
+                search.set_query(ed.search, ed.search.query, buf)
+            end
+            return true
+        elseif ctrl then
+            if key == "c" then
+                search.toggle_case_sensitive(ed.search, buf)
+                return true
+            elseif key == "w" then
+                search.toggle_whole_word(ed.search, buf)
+                return true
+            end
+        end
+        return false
+    end
+    
     if not ctrl and key:len() == 1 and key:match("%w") then
         if require("editor").has_selection(ed) then
             actions.delete_selection(ed, buf)
@@ -23,6 +54,13 @@ function keymap.handle_key(key, ed, buf)
     if ctrl then
         if key == "s" then
             require("buffer").save_file(buf)
+            return true
+        elseif key == "f" then
+            ed.search.active = true
+            if require("editor").has_selection(ed) then
+                ed.search.query = require("editor").get_selected_text(ed, buf)
+                search.set_query(ed.search, ed.search.query, buf)
+            end
             return true
         elseif key == "c" then
             actions.copy(ed, buf)
@@ -58,6 +96,17 @@ function keymap.handle_key(key, ed, buf)
             actions.delete_to_line_start(ed, buf)
             return true
         end
+    end
+    
+    if key == "f3" then
+        if #ed.search.results > 0 then
+            if shift then
+                search.goto_previous(ed.search, ed, buf)
+            else
+                search.goto_next(ed.search, ed, buf)
+            end
+        end
+        return true
     end
     
     if key == "return" then

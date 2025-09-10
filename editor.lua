@@ -14,7 +14,8 @@ function editor.create()
         viewport = {
             top_line = 1,
             left_col = 0
-        }
+        },
+        search = require("search").create()
     }
 end
 

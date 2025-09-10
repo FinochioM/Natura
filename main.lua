@@ -2,6 +2,7 @@ local love = require("love")
 local buffer = require("buffer")
 local editor = require("editor")
 local keymap = require("keymap")
+local search = require("search")
 
 local current_buffer
 local current_editor
@@ -37,12 +38,17 @@ function love.load(args)
 end
 
 function love.textinput(text)
-    if editor.has_selection(current_editor) then
-        local actions = require("actions")
-        actions.delete_selection(current_editor, current_buffer)
+    if current_editor.search.active then
+        current_editor.search.query = current_editor.search.query .. text
+        search.set_query(current_editor.search, current_editor.search.query, current_buffer)
+    else
+        if editor.has_selection(current_editor) then
+            local actions = require("actions")
+            actions.delete_selection(current_editor, current_buffer)
+        end
+        current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)
+        editor.update_viewport(current_editor, current_buffer)
     end
-    current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)
-    editor.update_viewport(current_editor, current_buffer)
 end
 
 function love.keypressed(key)
@@ -61,6 +67,37 @@ end
 
 function love.update(dt)
     -- Basic update loop
+end
+
+local function draw_search_highlights(ed, font, line_height, content_start_y)
+    if not ed.search.active or #ed.search.results == 0 then
+        return
+    end
+    
+    local visible_lines = editor.get_visible_line_count()
+    local viewport_start = ed.viewport.top_line
+    local viewport_end = viewport_start + visible_lines - 1
+    
+    for i, result in ipairs(ed.search.results) do
+        if result.line >= viewport_start and result.line <= viewport_end then
+            local y = content_start_y + (result.line - viewport_start) * line_height
+            local line = current_buffer.lines[result.line]
+            local before_text = string.sub(line, 1, result.start_col)
+            local match_text = string.sub(line, result.start_col + 1, result.end_col)
+            
+            local start_x = 10 + font:getWidth(before_text)
+            local width = font:getWidth(match_text)
+            
+            -- Highlight current result differently
+            if i == ed.search.current_result then
+                love.graphics.setColor(1, 0.7, 0, 0.6)  -- Orange for current result
+            else
+                love.graphics.setColor(1, 1, 0, 0.3)    -- Yellow for other results
+            end
+            
+            love.graphics.rectangle("fill", start_x, y, width, line_height)
+        end
+    end
 end
 
 local function draw_selection_highlight(ed, font, line_height, content_start_y)
@@ -104,6 +141,41 @@ local function draw_selection_highlight(ed, font, line_height, content_start_y)
     end
 end
 
+local function draw_search_bar(ed)
+    if not ed.search.active then return end
+    
+    local window_width = love.graphics.getWidth()
+    local window_height = love.graphics.getHeight()
+    local bar_height = 30
+    local bar_y = window_height - bar_height - 20
+    
+    love.graphics.setColor(0.2, 0.2, 0.2, 0.9)
+    love.graphics.rectangle("fill", 10, bar_y, window_width - 20, bar_height)
+    
+    love.graphics.setColor(0.5, 0.5, 0.5)
+    love.graphics.rectangle("line", 10, bar_y, window_width - 20, bar_height)
+    
+    love.graphics.setColor(1, 1, 1)
+    local search_text = "Find: " .. ed.search.query
+    if #ed.search.results > 0 then
+        search_text = search_text .. string.format(" (%d/%d)", ed.search.current_result, #ed.search.results)
+    else
+        search_text = search_text .. " (0 results)"
+    end
+    
+    local modes = {}
+    if ed.search.case_sensitive then table.insert(modes, "Aa") end
+    if ed.search.whole_word then table.insert(modes, "\\b") end
+    if #modes > 0 then
+        search_text = search_text .. " [" .. table.concat(modes, " ") .. "]"
+    end
+    
+    love.graphics.print(search_text, 15, bar_y + 5)
+    
+    love.graphics.setColor(0.7, 0.7, 0.7)
+    love.graphics.print("Enter/F3: next, Shift+F3: prev, Ctrl+C: case, Ctrl+W: word, Esc: close", 15, bar_y + 15)
+end
+
 function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     
@@ -120,6 +192,8 @@ function love.draw()
     local font = love.graphics.getFont()
     local line_height = font:getHeight()
     local content_start_y = 40
+    
+    draw_search_highlights(current_editor, font, line_height, content_start_y)
     
     draw_selection_highlight(current_editor, font, line_height, content_start_y)
     
@@ -142,6 +216,8 @@ function love.draw()
         love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
     end
     
+    draw_search_bar(current_editor)
+    
     love.graphics.setColor(0.6, 0.6, 0.6)
     local debug_text = string.format("Line %d/%d (showing %d-%d)", 
         current_editor.cursor_line, #current_buffer.lines,
@@ -151,7 +227,11 @@ function love.draw()
         debug_text = debug_text .. " [SELECTION]"
     end
     
-    love.graphics.print(debug_text, 10, love.graphics.getHeight() - 20)
+    if current_editor.search.active then
+        debug_text = debug_text .. " [SEARCH]"
+    end
+    
+    love.graphics.print(debug_text, 10, love.graphics.getHeight() - 40)
 end
 
 function love.quit()
