@@ -62,6 +62,7 @@ function buffer.load_file_external(buf, filepath)
     
     buf.filepath = filepath
     buf.dirty = false
+    print("Loaded: " .. filepath)
     return true
 end
 
@@ -73,20 +74,14 @@ function buffer.save_file(buf)
     
     local content = table.concat(buf.lines, "\n")
     
-    local success = pcall(function()
-        love.filesystem.write(buf.filepath, content)
-    end)
-    
-    if not success then
-        local file = io.open(buf.filepath, "w")
-        if not file then
-            print("Could not save file: " .. buf.filepath)
-            return false
-        end
-        
-        file:write(content)
-        file:close()
+    local file = io.open(buf.filepath, "w")
+    if not file then
+        print("Could not save file: " .. buf.filepath)
+        return false
     end
+    
+    file:write(content)
+    file:close()
     
     buf.dirty = false
     print("Saved: " .. buf.filepath)
