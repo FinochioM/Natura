@@ -38,7 +38,10 @@ function love.load(args)
 end
 
 function love.textinput(text)
-    if current_editor.goto_state.active then
+    if current_editor.file_dialog.active then
+        local file_dialog = require("file_dialog")
+        file_dialog.handle_text(current_editor.file_dialog, text)
+    elseif current_editor.goto_state.active then
         local goto_module = require("goto")
         goto_module.handle_input(current_editor.goto_state, text)
     elseif current_editor.search.active then
@@ -232,10 +235,13 @@ local function draw_file_dialog(ed)
         current_dir = "Drives"
     end
     love.graphics.print("Directory: " .. current_dir, dialog_x + 10, dialog_y + 30)
+
+    love.graphics.setColor(0.9, 0.9, 0.9)
+    love.graphics.print("Filter: " .. ed.file_dialog.input, dialog_x + 10, dialog_y + 50)
     
     local font = love.graphics.getFont()
     local line_height = font:getHeight()
-    local list_start_y = dialog_y + 60
+    local list_start_y = dialog_y + 70
     local visible_items = math.floor((dialog_height - 100) / line_height)
     
     for i = 1, math.min(#ed.file_dialog.files, visible_items) do
@@ -244,7 +250,7 @@ local function draw_file_dialog(ed)
         
         if i == ed.file_dialog.selected_index then
             love.graphics.setColor(0.3, 0.3, 0.6, 0.8)
-            love.graphics.rectangle("fill", dialog_x + 5, y - 2, dialog_width - 10, line_height)
+            love.graphics.rectangle("fill", dialog_x + 5, y - 2, dialog_width - 10, line_height + 5)
         end
         
         if file.type == "directory" or file.type == "drive" then

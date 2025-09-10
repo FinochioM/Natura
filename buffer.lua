@@ -41,6 +41,30 @@ function buffer.load_file(buf, filepath)
     return true
 end
 
+function buffer.load_file_external(buf, filepath)
+    local file = io.open(filepath, "r")
+    if not file then
+        print("Could not open file: " .. filepath)
+        return false
+    end
+    
+    local content = file:read("*all")
+    file:close()
+    
+    buf.lines = {}
+    for line in content:gmatch("[^\r\n]*") do
+        table.insert(buf.lines, line)
+    end
+    
+    if #buf.lines == 0 then
+        table.insert(buf.lines, "")
+    end
+    
+    buf.filepath = filepath
+    buf.dirty = false
+    return true
+end
+
 function buffer.save_file(buf)
     if not buf.filepath then
         print("No filepath set")

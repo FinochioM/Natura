@@ -16,6 +16,7 @@ function file_dialog.create()
         active = false,
         current_dir = file_dialog.get_initial_dir(),
         files = {},
+        all_files = {},
         selected_index = 1,
         input = ""
     }
@@ -57,20 +58,15 @@ function file_dialog.get_drives()
 end
 
 function file_dialog.scan_directory(dialog)
-    dialog.files = {}
-  
-    if not lfs then
-        file_dialog.scan_directory_love(dialog)
-        return
-    end
+    dialog.all_files = {}
     
     if love.system.getOS() == "Windows" and dialog.current_dir == "" then
-        dialog.files = file_dialog.get_drives()
+        dialog.all_files = file_dialog.get_drives()
         return
     end
     
     if dialog.current_dir ~= "/" and dialog.current_dir ~= "" then
-        table.insert(dialog.files, {name = "..", type = "directory"})
+        table.insert(dialog.all_files, {name = "..", type = "directory"})
     end
     
     local success, err = pcall(function()
@@ -84,35 +80,29 @@ function file_dialog.scan_directory(dialog)
                 local attr = lfs.attributes(full_path)
                 if attr then
                     local item = {name = entry, type = attr.mode}
-                    table.insert(dialog.files, item)
+                    table.insert(dialog.all_files, item)
                 end
             end
         end
     end)
     
     if not success then
-        table.insert(dialog.files, {name = "Cannot read directory: " .. (err or "unknown error"), type = "error"})
+        table.insert(dialog.all_files, {name = "Cannot read directory: " .. (err or "unknown error"), type = "error"})
     end
     
-    table.sort(dialog.files, function(a, b)
+    table.sort(dialog.all_files, function(a, b)
         if a.type == "directory" and b.type ~= "directory" then return true end
         if a.type ~= "directory" and b.type == "directory" then return false end
         return a.name < b.name
     end)
+
+    dialog.input = ""
+    file_dialog.filter_files(dialog)
 end
 
-function file_dialog.scan_directory_love(dialog)
-    table.insert(dialog.files, {name = "LFS not available - limited browsing", type = "error"})
-    
-    local success, items = pcall(love.filesystem.getDirectoryItems, ".")
-    if success and items then
-        for _, item in ipairs(items) do
-            local info = love.filesystem.getInfo(item)
-            if info then
-                table.insert(dialog.files, {name = item, type = info.type})
-            end
-        end
-    end
+function file_dialog.handle_text(dialog, text)
+    dialog.input = dialog.input .. text
+    file_dialog.filter_files(dialog)
 end
 
 function file_dialog.handle_key(dialog, key, editor, buffer)
@@ -124,9 +114,15 @@ function file_dialog.handle_key(dialog, key, editor, buffer)
         return true
     elseif key == "return" then
         return file_dialog.select_item(dialog, editor, buffer)
-    elseif key == "backspace" and lfs then
-        file_dialog.go_parent(dialog)
-        return true
+    elseif key == "backspace" then
+        if #dialog.input > 0 then
+            dialog.input = dialog.input:sub(1, -2)
+            file_dialog.filter_files(dialog)
+            return true
+        else
+            file_dialog.go_parent(dialog)
+            return true
+        end
     end
     return false
 end
@@ -173,47 +169,36 @@ function file_dialog.select_item(dialog, editor, buffer)
         end
         return true
     elseif item.type == "file" then
-        local full_path
-        if lfs then
-            full_path = dialog.current_dir .. "/" .. item.name
-            if love.system.getOS() == "Windows" then
-                full_path = dialog.current_dir .. "\\" .. item.name
-            end
-            
-            local file = io.open(full_path, "r")
-            if file then
-                local content = file:read("*all")
-                file:close()
-                
-                buffer.lines = {}
-                for line in content:gmatch("[^\r\n]*") do
-                    table.insert(buffer.lines, line)
-                end
-                if #buffer.lines == 0 then
-                    table.insert(buffer.lines, "")
-                end
-                buffer.filepath = full_path
-                buffer.dirty = false
-            end
-        else
-            local success, content = pcall(love.filesystem.read, item.name)
-            if success then
-                buffer.lines = {}
-                for line in content:gmatch("[^\r\n]*") do
-                    table.insert(buffer.lines, line)
-                end
-                if #buffer.lines == 0 then
-                    table.insert(buffer.lines, "")
-                end
-                buffer.filepath = item.name
-                buffer.dirty = false
-            end
+        local full_path = dialog.current_dir .. "/" .. item.name
+        if love.system.getOS() == "Windows" then
+            full_path = dialog.current_dir .. "\\" .. item.name
         end
+        
+        local buffer_module = require("buffer")
+        buffer_module.load_file_external(buffer, full_path)
         
         dialog.active = false
         return true
     end
     return false
+end
+
+function file_dialog.filter_files(dialog)
+    if dialog.input == "" then
+        dialog.files = dialog.all_files
+    else
+        dialog.files = {}
+        local search_lower = dialog.input:lower()
+        for _, file in ipairs(dialog.all_files) do
+            if file.name:lower():find(search_lower, 1, true) then
+                table.insert(dialog.files, file)
+            end
+        end
+    end
+    dialog.selected_index = math.min(dialog.selected_index, #dialog.files)
+    if dialog.selected_index == 0 and #dialog.files > 0 then
+        dialog.selected_index = 1
+    end
 end
 
 return file_dialog
