@@ -148,19 +148,21 @@ function file_dialog.go_parent(dialog)
 end
 
 function file_dialog.select_item(dialog, editor, buffer)
-    if dialog.selected_index > #dialog.files then return false end
+    if #dialog.files == 0 or dialog.selected_index < 1 or dialog.selected_index > #dialog.files then
+        return false
+    end
     
     local item = dialog.files[dialog.selected_index]
     
-    if item.type == "drive" and lfs then
+    if item.type == "drive" then
         dialog.current_dir = item.name .. "\\"
         file_dialog.scan_directory(dialog)
         dialog.selected_index = 1
         return true
     elseif item.type == "directory" then
-        if item.name == ".." and lfs then
+        if item.name == ".." then
             file_dialog.go_parent(dialog)
-        elseif lfs then
+        else
             if love.system.getOS() == "Windows" then
                 dialog.current_dir = dialog.current_dir .. "\\" .. item.name
             else
@@ -176,8 +178,14 @@ function file_dialog.select_item(dialog, editor, buffer)
             full_path = dialog.current_dir .. "\\" .. item.name
         end
         
-        local buffer_module = require("buffer")
-        buffer_module.load_file_external(buffer, full_path)
+        local file = io.open(full_path, "r")
+        if file then
+            local content = file:read("*all")
+            file:close()
+            
+            local buffer_module = require("buffer")
+            buffer_module.load_file_external(buffer, full_path)
+        end
         
         dialog.active = false
         return true
@@ -201,11 +209,10 @@ function file_dialog.filter_files(dialog)
         end
     end
     
-    if dialog.selected_index > #dialog.files then
-        dialog.selected_index = #dialog.files
-    end
-    if dialog.selected_index == 0 and #dialog.files > 0 then
-        dialog.selected_index = 1
+    if #dialog.files == 0 then
+        dialog.selected_index = 0
+    else
+        dialog.selected_index = math.max(1, math.min(dialog.selected_index, #dialog.files))
     end
 end
 

@@ -56,7 +56,6 @@ function actions.cut(ed, buf)
     if editor.has_selection(ed) then
         actions.delete_selection(ed, buf)
     else
-        -- Cut current line
         if #buf.lines > 1 then
             table.remove(buf.lines, ed.cursor_line)
             if ed.cursor_line > #buf.lines then
@@ -196,11 +195,25 @@ function actions.move_word_left(ed, buf, extend_selection)
     local line = buf.lines[ed.cursor_line]
     local new_col = ed.cursor_col
 
-    while new_col > 0 and string.match(string.sub(line, new_col, new_col), "%w") do
+    if new_col > 0 then
         new_col = new_col - 1
-    end
-    while new_col > 0 and string.match(string.sub(line, new_col, new_col), "%s") do
-        new_col = new_col - 1
+        
+        while new_col > 0 and string.match(string.sub(line, new_col + 1, new_col + 1), "%s") do
+            new_col = new_col - 1
+        end
+        
+        if new_col > 0 then
+            local char = string.sub(line, new_col + 1, new_col + 1)
+            if string.match(char, "%w") then
+                while new_col > 0 and string.match(string.sub(line, new_col, new_col), "%w") do
+                    new_col = new_col - 1
+                end
+            else
+                while new_col > 0 and not string.match(string.sub(line, new_col, new_col), "[%w%s]") do
+                    new_col = new_col - 1
+                end
+            end
+        end
     end
 
     ed.cursor_col = new_col
@@ -221,11 +234,26 @@ function actions.move_word_right(ed, buf, extend_selection)
     local line = buf.lines[ed.cursor_line]
     local new_col = ed.cursor_col
 
-    while new_col < #line and string.match(string.sub(line, new_col + 1, new_col + 1), "%w") do
-        new_col = new_col + 1
-    end
-    while new_col < #line and string.match(string.sub(line, new_col + 1, new_col + 1), "%s") do
-        new_col = new_col + 1
+    if new_col < #line then
+        local char = string.sub(line, new_col + 1, new_col + 1)
+        
+        if string.match(char, "%w") then
+            while new_col < #line and string.match(string.sub(line, new_col + 1, new_col + 1), "%w") do
+                new_col = new_col + 1
+            end
+        elseif string.match(char, "%s") then
+            while new_col < #line and string.match(string.sub(line, new_col + 1, new_col + 1), "%s") do
+                new_col = new_col + 1
+            end
+        else
+            while new_col < #line and not string.match(string.sub(line, new_col + 1, new_col + 1), "[%w%s]") do
+                new_col = new_col + 1
+            end
+        end
+        
+        while new_col < #line and string.match(string.sub(line, new_col + 1, new_col + 1), "%s") do
+            new_col = new_col + 1
+        end
     end
 
     ed.cursor_col = new_col

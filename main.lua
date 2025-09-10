@@ -264,6 +264,11 @@ local function draw_file_dialog(ed)
             love.graphics.print(file.name, dialog_x + 10, y)
         end
     end
+
+    if #ed.file_dialog.files == 0 and ed.file_dialog.input ~= "" then
+        love.graphics.setColor(0.7, 0.7, 0.7)
+        love.graphics.print("No matches found", dialog_x + 10, list_start_y)
+    end
 end
 
 function love.draw()
