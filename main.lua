@@ -227,7 +227,10 @@ local function draw_file_dialog(ed)
     love.graphics.print("Open File", dialog_x + 10, dialog_y + 10)
     
     love.graphics.setColor(0.8, 0.8, 0.8)
-    local current_dir = love.filesystem.getWorkingDirectory()
+    local current_dir = ed.file_dialog.current_dir
+    if current_dir == "" then
+        current_dir = "Drives"
+    end
     love.graphics.print("Directory: " .. current_dir, dialog_x + 10, dialog_y + 30)
     
     local font = love.graphics.getFont()
@@ -244,17 +247,17 @@ local function draw_file_dialog(ed)
             love.graphics.rectangle("fill", dialog_x + 5, y - 2, dialog_width - 10, line_height)
         end
         
-        if file.type == "directory" then
+        if file.type == "directory" or file.type == "drive" then
             love.graphics.setColor(0.6, 0.8, 1)
             love.graphics.print("[" .. file.name .. "]", dialog_x + 10, y)
+        elseif file.type == "error" then
+            love.graphics.setColor(1, 0.5, 0.5)
+            love.graphics.print(file.name, dialog_x + 10, y)
         else
             love.graphics.setColor(1, 1, 1)
             love.graphics.print(file.name, dialog_x + 10, y)
         end
     end
-    
-    love.graphics.setColor(0.7, 0.7, 0.7)
-    love.graphics.print("↑↓ Navigate, Enter Select, Esc Cancel", dialog_x + 10, dialog_y + dialog_height - 20)
 end
 
 function love.draw()
