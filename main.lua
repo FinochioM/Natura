@@ -37,6 +37,10 @@ function love.load(args)
 end
 
 function love.textinput(text)
+    if editor.has_selection(current_editor) then
+        local actions = require("actions")
+        actions.delete_selection(current_editor, current_buffer)
+    end
     current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)
     editor.update_viewport(current_editor, current_buffer)
 end
@@ -59,6 +63,47 @@ function love.update(dt)
     -- Basic update loop
 end
 
+local function draw_selection_highlight(ed, font, line_height, content_start_y)
+    if not editor.has_selection(ed) then
+        return
+    end
+    
+    local bounds = editor.get_selection_bounds(ed)
+    if not bounds then return end
+    
+    love.graphics.setColor(0.3, 0.4, 0.6, 0.3)
+    
+    local visible_lines = editor.get_visible_line_count()
+    local viewport_start = ed.viewport.top_line
+    local viewport_end = viewport_start + visible_lines - 1
+    
+    for line_num = math.max(bounds.start_line, viewport_start), math.min(bounds.end_line, viewport_end) do
+        local y = content_start_y + (line_num - viewport_start) * line_height
+        local line = current_buffer.lines[line_num]
+        
+        local start_col, end_col
+        if line_num == bounds.start_line and line_num == bounds.end_line then
+            start_col, end_col = bounds.start_col, bounds.end_col
+        elseif line_num == bounds.start_line then
+            start_col, end_col = bounds.start_col, #line
+        elseif line_num == bounds.end_line then
+            start_col, end_col = 0, bounds.end_col
+        else
+            start_col, end_col = 0, #line
+        end
+        
+        local start_text = string.sub(line, 1, start_col)
+        local selected_text = string.sub(line, start_col + 1, end_col)
+        
+        local start_x = 10 + font:getWidth(start_text)
+        local width = font:getWidth(selected_text)
+        
+        if width < 3 then width = 3 end
+        
+        love.graphics.rectangle("fill", start_x, y, width, line_height)
+    end
+end
+
 function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     
@@ -75,6 +120,8 @@ function love.draw()
     local font = love.graphics.getFont()
     local line_height = font:getHeight()
     local content_start_y = 40
+    
+    draw_selection_highlight(current_editor, font, line_height, content_start_y)
     
     love.graphics.setColor(1, 1, 1)
     
@@ -96,9 +143,15 @@ function love.draw()
     end
     
     love.graphics.setColor(0.6, 0.6, 0.6)
-    love.graphics.print(string.format("Line %d/%d (showing %d-%d)", 
+    local debug_text = string.format("Line %d/%d (showing %d-%d)", 
         current_editor.cursor_line, #current_buffer.lines,
-        current_editor.viewport.top_line, end_line), 10, love.graphics.getHeight() - 20)
+        current_editor.viewport.top_line, end_line)
+    
+    if editor.has_selection(current_editor) then
+        debug_text = debug_text .. " [SELECTION]"
+    end
+    
+    love.graphics.print(debug_text, 10, love.graphics.getHeight() - 20)
 end
 
 function love.quit()
