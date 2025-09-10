@@ -3,7 +3,9 @@
     + Cannot write in the search bar. FIXED.
     + When opening a file, it cannot be saved. FIXED.
     + When running the application for the first time, the list of drives do not appear. FIXED.
+    + If I enter a filename or directory that does not exist, the program crashes.
 
 # Errors:
     + When reaching an ASCII character, it seems like CTRL+Arrow shortcuts do not work. From left to right.
     + When a file is already opened, if it gets updated/changed from a different editor, it does not update in Natura.
+    + Files have empty lines when opened from the editor.

@@ -8,36 +8,16 @@ function buffer.create()
     }
 end
 
-function buffer.load_file(buf, filepath)
-    print("Attempting to load: " .. filepath)
-    
-    local info = love.filesystem.getInfo(filepath)
-    if not info then
-        print("Error: File does not exist: " .. filepath)
-        return false
-    end
-    
-    local content, error = love.filesystem.read(filepath)
+function buffer.load_file(buf, filename)
+    local content = love.filesystem.read(filename)
     if not content then
-        print("Error reading file: " .. (error or "unknown error"))
+        print("Could not read file: " .. filename)
         return false
     end
     
-    buf.lines = {}
-    for line in content:gmatch("([^\n]*)\n?") do
-        if line ~= "" or #buf.lines == 0 then
-            table.insert(buf.lines, line)
-        end
-    end
-    
-    if #buf.lines == 0 then
-        buf.lines = {""}
-    end
-    
-    buf.filepath = filepath
+    buf.lines = buffer.split_lines(content)
+    buf.filepath = filename
     buf.dirty = false
-    
-    print("Successfully loaded: " .. filepath)
     return true
 end
 
@@ -51,19 +31,37 @@ function buffer.load_file_external(buf, filepath)
     local content = file:read("*all")
     file:close()
     
-    buf.lines = {}
-    for line in content:gmatch("[^\r\n]*") do
-        table.insert(buf.lines, line)
-    end
-    
-    if #buf.lines == 0 then
-        table.insert(buf.lines, "")
-    end
-    
+    buf.lines = buffer.split_lines(content)
     buf.filepath = filepath
     buf.dirty = false
     print("Loaded: " .. filepath)
     return true
+end
+
+function buffer.split_lines(content)
+    local lines = {}
+    
+    content = content:gsub("\r\n", "\n"):gsub("\r", "\n")
+    
+    local start = 1
+    while true do
+        local pos = content:find("\n", start)
+        if not pos then
+            local line = content:sub(start)
+            table.insert(lines, line)
+            break
+        else
+            local line = content:sub(start, pos - 1)
+            table.insert(lines, line)
+            start = pos + 1
+        end
+    end
+    
+    if #lines == 0 then
+        table.insert(lines, "")
+    end
+    
+    return lines
 end
 
 function buffer.save_file(buf)
