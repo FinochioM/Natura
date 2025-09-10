@@ -12,9 +12,9 @@ function search.create()
     }
 end
 
-function search.set_query(s, query)
+function search.set_query(s, query, buf)
     s.query = query
-    search.find_all(s)
+    search.find_all(s, buf)
 end
 
 function search.find_all(s, buf)

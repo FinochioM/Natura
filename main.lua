@@ -145,15 +145,16 @@ local function draw_search_bar(ed)
     if not ed.search.active then return end
     
     local window_width = love.graphics.getWidth()
-    local window_height = love.graphics.getHeight()
-    local bar_height = 30
-    local bar_y = window_height - bar_height - 20
+    local bar_width = 300
+    local bar_height = 25
+    local bar_x = window_width - bar_width - 10
+    local bar_y = 10
     
     love.graphics.setColor(0.2, 0.2, 0.2, 0.9)
-    love.graphics.rectangle("fill", 10, bar_y, window_width - 20, bar_height)
+    love.graphics.rectangle("fill", bar_x, bar_y, bar_width, bar_height)
     
     love.graphics.setColor(0.5, 0.5, 0.5)
-    love.graphics.rectangle("line", 10, bar_y, window_width - 20, bar_height)
+    love.graphics.rectangle("line", bar_x, bar_y, bar_width, bar_height)
     
     love.graphics.setColor(1, 1, 1)
     local search_text = "Find: " .. ed.search.query
@@ -170,10 +171,7 @@ local function draw_search_bar(ed)
         search_text = search_text .. " [" .. table.concat(modes, " ") .. "]"
     end
     
-    love.graphics.print(search_text, 15, bar_y + 5)
-    
-    love.graphics.setColor(0.7, 0.7, 0.7)
-    love.graphics.print("Enter/F3: next, Shift+F3: prev, Ctrl+C: case, Ctrl+W: word, Esc: close", 15, bar_y + 15)
+    love.graphics.print(search_text, bar_x + 5, bar_y + 5)
 end
 
 function love.draw()
