@@ -4,8 +4,17 @@ function buffer.create()
     return {
         lines = {""},
         filepath = nil,
-        dirty = false
+        dirty = false,
+        last_modified = 0
     }
+end
+
+function buffer.get_file_mtime(filepath)
+    if not filepath then return 0 end
+    
+    local lfs = require("lfs")
+    local attr = lfs.attributes(filepath)
+    return attr and attr.modification or 0
 end
 
 function buffer.load_file(buf, filename)
@@ -18,6 +27,7 @@ function buffer.load_file(buf, filename)
     buf.lines = buffer.split_lines(content)
     buf.filepath = filename
     buf.dirty = false
+    buf.last_modified = buffer.get_file_mtime(filename)
     return true
 end
 
@@ -34,8 +44,28 @@ function buffer.load_file_external(buf, filepath)
     buf.lines = buffer.split_lines(content)
     buf.filepath = filepath
     buf.dirty = false
+    buf.last_modified = buffer.get_file_mtime(filepath)
     print("Loaded: " .. filepath)
     return true
+end
+
+function buffer.check_external_modification(buf)
+    if not buf.filepath or buf.dirty then
+        return false
+    end
+    
+    local current_mtime = buffer.get_file_mtime(buf.filepath)
+    return current_mtime > buf.last_modified
+end
+
+function buffer.reload_from_disk(buf)
+    if not buf.filepath then return false end
+    
+    if buf.filepath:find("^[A-Za-z]:\\") or buf.filepath:find("^/") then
+        return buffer.load_file_external(buf, buf.filepath)
+    else
+        return buffer.load_file(buf, buf.filepath)
+    end
 end
 
 function buffer.split_lines(content)
@@ -82,6 +112,7 @@ function buffer.save_file(buf)
     file:close()
     
     buf.dirty = false
+    buf.last_modified = buffer.get_file_mtime(buf.filepath)
     print("Saved: " .. buf.filepath)
     return true
 end

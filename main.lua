@@ -7,6 +7,9 @@ local search = require("search")
 local current_buffer
 local current_editor
 
+local file_check_timer = 0
+local file_check_interval = 1.0
+
 function love.load(args)
     love.window.setTitle("Natura Editor")
     love.window.setMode(800, 600, {
@@ -72,7 +75,21 @@ function love.wheelmoved(x, y)
 end
 
 function love.update(dt)
-    -- Basic update loop
+    file_check_timer = file_check_timer + dt
+    
+    if file_check_timer >= file_check_interval then
+        file_check_timer = 0
+        
+        if buffer.check_external_modification(current_buffer) then
+            print("File modified externally, reloading: " .. current_buffer.filepath)
+            buffer.reload_from_disk(current_buffer)
+            
+            current_editor.cursor_line = math.min(current_editor.cursor_line, #current_buffer.lines)
+            current_editor.cursor_col = math.min(current_editor.cursor_col, #current_buffer.lines[current_editor.cursor_line])
+            editor.clear_selection(current_editor)
+            editor.update_viewport(current_editor, current_buffer)
+        end
+    end
 end
 
 local function draw_search_highlights(ed, font, line_height, content_start_y)
