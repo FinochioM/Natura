@@ -38,7 +38,10 @@ function love.load(args)
 end
 
 function love.textinput(text)
-    if current_editor.search.active then
+    if current_editor.goto_state.active then
+        local goto_module = require("goto")
+        goto_module.handle_input(current_editor.goto_state, text)
+    elseif current_editor.search.active then
         current_editor.search.query = current_editor.search.query .. text
         search.set_query(current_editor.search, current_editor.search.query, current_buffer)
     else
@@ -88,7 +91,6 @@ local function draw_search_highlights(ed, font, line_height, content_start_y)
             local start_x = 10 + font:getWidth(before_text)
             local width = font:getWidth(match_text)
             
-            -- Highlight current result differently
             if i == ed.search.current_result then
                 love.graphics.setColor(1, 0.7, 0, 0.6)  -- Orange for current result
             else
@@ -185,6 +187,26 @@ local function draw_search_bar(ed)
     love.graphics.print(search_text, bar_x + 5, bar_y + 5)
 end
 
+local function draw_goto_bar(ed)
+    if not ed.goto_state.active then return end
+    
+    local window_width = love.graphics.getWidth()
+    local bar_width = 300
+    local bar_height = 25
+    local bar_x = window_width - bar_width - 10
+    local bar_y = 10
+    
+    love.graphics.setColor(0.2, 0.2, 0.2, 0.9)
+    love.graphics.rectangle("fill", bar_x, bar_y, bar_width, bar_height)
+    
+    love.graphics.setColor(0.5, 0.5, 0.5)
+    love.graphics.rectangle("line", bar_x, bar_y, bar_width, bar_height)
+    
+    love.graphics.setColor(1, 1, 1)
+    local text = "Go to line: " .. ed.goto_state.input
+    love.graphics.print(text, bar_x + 5, bar_y + 5)
+end
+
 function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     
@@ -226,6 +248,7 @@ function love.draw()
     end
     
     draw_search_bar(current_editor)
+    draw_goto_bar(current_editor)
     
     love.graphics.setColor(0.6, 0.6, 0.6)
     local debug_text = string.format("Line %d/%d (showing %d-%d)", 
@@ -240,7 +263,7 @@ function love.draw()
         debug_text = debug_text .. " [SEARCH]"
     end
     
-    love.graphics.print(debug_text, 10, love.graphics.getHeight() - 40)
+    love.graphics.print(debug_text, 10, love.graphics.getHeight() - 20)
 end
 
 function love.quit()

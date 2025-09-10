@@ -13,6 +13,23 @@ end
 function keymap.handle_key(key, ed, buf)
     local shift = is_shift_pressed()
     local ctrl = is_ctrl_pressed()
+
+    if ed.goto_state.active then
+        if key == "escape" then
+            ed.goto_state.active = false
+            return true
+        elseif key == "return" then
+            local goto_module = require("goto")
+            goto_module.execute(ed.goto_state, ed, buf)
+            return true
+        elseif key == "backspace" then
+            if #ed.goto_state.input > 0 then
+                ed.goto_state.input = ed.goto_state.input:sub(1, -2)
+            end
+            return true
+        end
+        return false
+    end
     
     if ed.search.active then
         if key == "escape" then
@@ -56,11 +73,18 @@ function keymap.handle_key(key, ed, buf)
             require("buffer").save_file(buf)
             return true
         elseif key == "f" then
+            ed.goto_state.active = false 
             ed.search.active = true
             if require("editor").has_selection(ed) then
                 ed.search.query = require("editor").get_selected_text(ed, buf)
                 search.set_query(ed.search, ed.search.query, buf)
             end
+            return true
+        elseif key == "g" then
+            local search = require("search")
+            search.close(ed.search)
+            local goto_module = require("goto")
+            goto_module.toggle(ed.goto_state)
             return true
         elseif key == "c" then
             actions.copy(ed, buf)

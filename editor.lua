@@ -15,7 +15,8 @@ function editor.create()
             top_line = 1,
             left_col = 0
         },
-        search = require("search").create()
+        search = require("search").create(),
+        goto_state = require("goto").create()
     }
 end
 
