@@ -1,0 +1,8 @@
+* Fixes *
+# Navigate to file command:
+    + Cannot write in the search bar. FIXED.
+    + When opening a file, it cannot be saved.
+    + When running the application for the first time, the list of drives do not appear. FIXED.
+
+# Errors:
+    + When reaching an ASCII character, it seems like CTRL+Arrow shortcuts do not work. From left to right.

@@ -67,22 +67,25 @@ end
 
 function buffer.save_file(buf)
     if not buf.filepath then
-        print("No filepath set")
+        print("No filepath to save to")
         return false
     end
     
-    local content = ""
-    for i, line in ipairs(buf.lines) do
-        content = content .. line
-        if i < #buf.lines then
-            content = content .. "\n"
-        end
-    end
+    local content = table.concat(buf.lines, "\n")
     
-    local success, error = love.filesystem.write(buf.filepath, content)
+    local success = pcall(function()
+        love.filesystem.write(buf.filepath, content)
+    end)
+    
     if not success then
-        print("Error saving file: " .. (error or "unknown error"))
-        return false
+        local file = io.open(buf.filepath, "w")
+        if not file then
+            print("Could not save file: " .. buf.filepath)
+            return false
+        end
+        
+        file:write(content)
+        file:close()
     end
     
     buf.dirty = false

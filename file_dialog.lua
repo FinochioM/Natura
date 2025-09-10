@@ -37,9 +37,9 @@ end
 function file_dialog.toggle(dialog)
     dialog.active = not dialog.active
     if dialog.active then
-        file_dialog.scan_directory(dialog)
         dialog.input = ""
         dialog.selected_index = 1
+        file_dialog.scan_directory(dialog)
     end
 end
 
@@ -62,6 +62,8 @@ function file_dialog.scan_directory(dialog)
     
     if love.system.getOS() == "Windows" and dialog.current_dir == "" then
         dialog.all_files = file_dialog.get_drives()
+        dialog.input = ""
+        file_dialog.filter_files(dialog)
         return
     end
     
@@ -87,7 +89,7 @@ function file_dialog.scan_directory(dialog)
     end)
     
     if not success then
-        table.insert(dialog.all_files, {name = "Cannot read directory: " .. (err or "unknown error"), type = "error"})
+        table.insert(dialog.all_files, {name = "Cannot read directory", type = "error"})
     end
     
     table.sort(dialog.all_files, function(a, b)
@@ -95,7 +97,7 @@ function file_dialog.scan_directory(dialog)
         if a.type ~= "directory" and b.type == "directory" then return false end
         return a.name < b.name
     end)
-
+    
     dialog.input = ""
     file_dialog.filter_files(dialog)
 end
@@ -185,7 +187,10 @@ end
 
 function file_dialog.filter_files(dialog)
     if dialog.input == "" then
-        dialog.files = dialog.all_files
+        dialog.files = {}
+        for i, file in ipairs(dialog.all_files) do
+            dialog.files[i] = file
+        end
     else
         dialog.files = {}
         local search_lower = dialog.input:lower()
@@ -195,7 +200,10 @@ function file_dialog.filter_files(dialog)
             end
         end
     end
-    dialog.selected_index = math.min(dialog.selected_index, #dialog.files)
+    
+    if dialog.selected_index > #dialog.files then
+        dialog.selected_index = #dialog.files
+    end
     if dialog.selected_index == 0 and #dialog.files > 0 then
         dialog.selected_index = 1
     end
