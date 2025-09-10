@@ -30,6 +30,16 @@ function keymap.handle_key(key, ed, buf)
         end
         return false
     end
+
+    if ed.file_dialog.active then
+        if key == "escape" then
+            ed.file_dialog.active = false
+            return true
+        else
+            local file_dialog = require("file_dialog")
+            return file_dialog.handle_key(ed.file_dialog, key, ed, buf)
+        end
+    end
     
     if ed.search.active then
         if key == "escape" then
@@ -88,6 +98,10 @@ function keymap.handle_key(key, ed, buf)
             return true
         elseif key == "c" then
             actions.copy(ed, buf)
+            return true
+        elseif key == "o" then
+            local file_dialog = require("file_dialog")
+            file_dialog.toggle(ed.file_dialog)
             return true
         elseif key == "v" then
             actions.paste(ed, buf)

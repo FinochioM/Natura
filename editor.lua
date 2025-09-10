@@ -16,7 +16,8 @@ function editor.create()
             left_col = 0
         },
         search = require("search").create(),
-        goto_state = require("goto").create()
+        goto_state = require("goto").create(),
+        file_dialog = require("file_dialog").create()
     }
 end
 

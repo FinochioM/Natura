@@ -207,6 +207,56 @@ local function draw_goto_bar(ed)
     love.graphics.print(text, bar_x + 5, bar_y + 5)
 end
 
+local function draw_file_dialog(ed)
+    if not ed.file_dialog.active then return end
+    
+    local window_width = love.graphics.getWidth()
+    local window_height = love.graphics.getHeight()
+    local dialog_width = 500
+    local dialog_height = 400
+    local dialog_x = (window_width - dialog_width) / 2
+    local dialog_y = (window_height - dialog_height) / 2
+    
+    love.graphics.setColor(0.2, 0.2, 0.2, 0.95)
+    love.graphics.rectangle("fill", dialog_x, dialog_y, dialog_width, dialog_height)
+    
+    love.graphics.setColor(0.5, 0.5, 0.5)
+    love.graphics.rectangle("line", dialog_x, dialog_y, dialog_width, dialog_height)
+    
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("Open File", dialog_x + 10, dialog_y + 10)
+    
+    love.graphics.setColor(0.8, 0.8, 0.8)
+    local current_dir = love.filesystem.getWorkingDirectory()
+    love.graphics.print("Directory: " .. current_dir, dialog_x + 10, dialog_y + 30)
+    
+    local font = love.graphics.getFont()
+    local line_height = font:getHeight()
+    local list_start_y = dialog_y + 60
+    local visible_items = math.floor((dialog_height - 100) / line_height)
+    
+    for i = 1, math.min(#ed.file_dialog.files, visible_items) do
+        local file = ed.file_dialog.files[i]
+        local y = list_start_y + (i - 1) * line_height
+        
+        if i == ed.file_dialog.selected_index then
+            love.graphics.setColor(0.3, 0.3, 0.6, 0.8)
+            love.graphics.rectangle("fill", dialog_x + 5, y - 2, dialog_width - 10, line_height)
+        end
+        
+        if file.type == "directory" then
+            love.graphics.setColor(0.6, 0.8, 1)
+            love.graphics.print("[" .. file.name .. "]", dialog_x + 10, y)
+        else
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.print(file.name, dialog_x + 10, y)
+        end
+    end
+    
+    love.graphics.setColor(0.7, 0.7, 0.7)
+    love.graphics.print("↑↓ Navigate, Enter Select, Esc Cancel", dialog_x + 10, dialog_y + dialog_height - 20)
+end
+
 function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     
@@ -249,6 +299,7 @@ function love.draw()
     
     draw_search_bar(current_editor)
     draw_goto_bar(current_editor)
+    draw_file_dialog(current_editor)
     
     love.graphics.setColor(0.6, 0.6, 0.6)
     local debug_text = string.format("Line %d/%d (showing %d-%d)", 
