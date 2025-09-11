@@ -635,6 +635,11 @@ function actions.unindent(ed, buf)
 end
 
 function actions.tab_or_indent(ed, buf)
+    if editor.has_selection(ed) then
+        actions.indent(ed, buf)
+        return
+    end
+    
     local config = require("config")
     local tab_size = config.get("tab_size")
     
@@ -654,7 +659,6 @@ function actions.tab_or_indent(ed, buf)
         editor.update_viewport(ed, buf)
     end
 end
-
 
 local function get_comment_prefix(filepath)
     if not filepath then return "// " end

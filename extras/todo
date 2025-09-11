@@ -13,9 +13,9 @@
     + When reaching an ASCII character, it seems like CTRL+Arrow shortcuts do not work. From left to right. FIXED.
     + When a file is already opened, if it gets updated/changed from a different editor, it does not update in Natura. FIXED.
     + Files have empty lines when opened from the editor. FIXED.
-    + When I select a text and press tab, instead of indenting the text it creates a tab space at the end of the line.
-    + Multi line comment does not work. When I select more than one line, if I press CTRL+/ it should comment all the lines.
+    + When I select a text and press tab, instead of indenting the text it creates a tab space at the end of the line. FIXED.
+    + Multi line comment does not work. When I select more than one line, if I press CTRL+/ it should comment all the lines. FIXED.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
-    + Customization like focus.
+    + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]
