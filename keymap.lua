@@ -186,6 +186,14 @@ function keymap.handle_key(key, ed, buf)
         end
         require("editor").update_viewport(ed, buf)
         return true
+
+    elseif key == "tab" then
+        if shift then
+            actions.unindent(ed, buf)
+        else
+            actions.tab_or_indent(ed, buf)
+        end
+        return true
         
     elseif key == "delete" then
         if require("editor").has_selection(ed) then
@@ -207,7 +215,9 @@ function keymap.handle_key(key, ed, buf)
     elseif key == "delete" and shift then
         actions.delete_line(ed, buf)
         return true
-    elseif love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt") then
+    end
+    
+    if love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt") then
         if key == "up" then
             actions.move_lines_up(ed, buf)
             return true

@@ -508,4 +508,151 @@ function actions.move_lines_down(ed, buf)
     editor.update_viewport(ed, buf)
 end
 
+function actions.indent(ed, buf)
+    local config = require("config")
+    local tab_size = config.get("tab_size")
+    local indent_using = config.get("indent_using")
+    
+    local indent_text
+    if indent_using == "tabs" then
+        indent_text = "\t"
+    else
+        indent_text = string.rep(" ", tab_size)
+    end
+    
+    if editor.has_selection(ed) then
+        local bounds = editor.get_selection_bounds(ed)
+        local undo = require("undo")
+        undo.start_edit_group(ed.undo_state, ed)
+        
+        for line_num = bounds.start_line, bounds.end_line do
+            undo.record_insertion(ed.undo_state, line_num, 0, indent_text, ed)
+            buf.lines[line_num] = indent_text .. buf.lines[line_num]
+        end
+        
+        undo.finish_edit_group(ed.undo_state, ed)
+        
+        ed.selection.start_col = ed.selection.start_col + #indent_text
+        ed.selection.end_col = ed.selection.end_col + #indent_text
+        ed.cursor_col = ed.cursor_col + #indent_text
+        
+        buffer.mark_dirty(buf)
+        editor.update_viewport(ed, buf)
+    else
+        local undo = require("undo")
+        undo.record_insertion(ed.undo_state, ed.cursor_line, ed.cursor_col, indent_text, ed)
+        
+        ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, indent_text)
+        editor.update_viewport(ed, buf)
+    end
+end
+
+function actions.unindent(ed, buf)
+    local config = require("config")
+    local tab_size = config.get("tab_size")
+    local indent_using = config.get("indent_using")
+    
+    if editor.has_selection(ed) then
+        local bounds = editor.get_selection_bounds(ed)
+        local undo = require("undo")
+        undo.start_edit_group(ed.undo_state, ed)
+        
+        for line_num = bounds.start_line, bounds.end_line do
+            local line = buf.lines[line_num]
+            local removed = 0
+            
+            if indent_using == "tabs" then
+                if line:sub(1, 1) == "\t" then
+                    undo.record_deletion(ed.undo_state, line_num, 0, "\t", ed)
+                    buf.lines[line_num] = line:sub(2)
+                    removed = 1
+                end
+            else
+                local spaces_to_remove = 0
+                for i = 1, math.min(tab_size, #line) do
+                    if line:sub(i, i) == " " then
+                        spaces_to_remove = spaces_to_remove + 1
+                    else
+                        break
+                    end
+                end
+                
+                if spaces_to_remove > 0 then
+                    local removed_text = line:sub(1, spaces_to_remove)
+                    undo.record_deletion(ed.undo_state, line_num, 0, removed_text, ed)
+                    buf.lines[line_num] = line:sub(spaces_to_remove + 1)
+                    removed = spaces_to_remove
+                end
+            end
+            
+            if line_num == bounds.start_line then
+                ed.selection.start_col = math.max(0, ed.selection.start_col - removed)
+            end
+            if line_num == bounds.end_line then
+                ed.selection.end_col = math.max(0, ed.selection.end_col - removed)
+            end
+        end
+        
+        undo.finish_edit_group(ed.undo_state, ed)
+        ed.cursor_col = math.max(0, ed.cursor_col - (indent_using == "tabs" and 1 or tab_size))
+        
+        buffer.mark_dirty(buf)
+        editor.update_viewport(ed, buf)
+    else
+        local line = buf.lines[ed.cursor_line]
+        local removed = 0
+        
+        local undo = require("undo")
+        
+        if indent_using == "tabs" then
+            if line:sub(1, 1) == "\t" then
+                undo.record_deletion(ed.undo_state, ed.cursor_line, 0, "\t", ed)
+                buf.lines[ed.cursor_line] = line:sub(2)
+                removed = 1
+            end
+        else
+            local spaces_to_remove = 0
+            for i = 1, math.min(tab_size, #line) do
+                if line:sub(i, i) == " " then
+                    spaces_to_remove = spaces_to_remove + 1
+                else
+                    break
+                end
+            end
+            
+            if spaces_to_remove > 0 then
+                local removed_text = line:sub(1, spaces_to_remove)
+                undo.record_deletion(ed.undo_state, ed.cursor_line, 0, removed_text, ed)
+                buf.lines[ed.cursor_line] = line:sub(spaces_to_remove + 1)
+                removed = spaces_to_remove
+            end
+        end
+        
+        ed.cursor_col = math.max(0, ed.cursor_col - removed)
+        buffer.mark_dirty(buf)
+        editor.update_viewport(ed, buf)
+    end
+end
+
+function actions.tab_or_indent(ed, buf)
+    local config = require("config")
+    local tab_size = config.get("tab_size")
+    
+    local line = buf.lines[ed.cursor_line]
+    local before_cursor = line:sub(1, ed.cursor_col)
+    
+    if before_cursor:match("^%s*$") then
+        actions.indent(ed, buf)
+    else
+        local spaces_needed = tab_size - (ed.cursor_col % tab_size)
+        local spaces = string.rep(" ", spaces_needed)
+        
+        local undo = require("undo")
+        undo.record_insertion(ed.undo_state, ed.cursor_line, ed.cursor_col, spaces, ed)
+        
+        ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, spaces)
+        editor.update_viewport(ed, buf)
+    end
+end
+
 return actions

@@ -11,8 +11,14 @@ local file_check_timer = 0
 local file_check_interval = 1.0
 
 function love.load(args)
+    local config = require("config")
+    config.load()
+
     love.window.setTitle("Natura Editor")
-    love.window.setMode(800, 600, {
+    local window_width = config.get("window_width")
+    local window_height = config.get("window_height")
+    
+    love.window.setMode(window_width, window_height, {
         resizable = true,
         minwidth = 400,
         minheight = 300
