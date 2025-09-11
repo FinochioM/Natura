@@ -6,8 +6,8 @@
     + If I enter a filename or directory that does not exist, the program crashes. FIXED.
 
 # Undo errors:
-    + When pressing CTRL+Z, the program crashes. (only after having typed some text before AND not having the text selected)
-    + CTRL+Y doesnt seem to do anything. Only works when the text is selected.
+    + When pressing CTRL+Z, the program crashes. (only after having typed some text before AND not having the text selected) FIXED.
+    + CTRL+Y doesnt seem to do anything. Only works when the text is selected. FIXED.
 
 # Errors:
     + When reaching an ASCII character, it seems like CTRL+Arrow shortcuts do not work. From left to right. FIXED.

@@ -11,7 +11,7 @@ end
 
 function undo.start_edit_group(undo_state, editor)
     if undo_state.current_group then
-        undo.finish_edit_group(undo_state)
+        undo.finish_edit_group(undo_state, editor)
     end
     
     undo_state.current_group = {
@@ -81,8 +81,8 @@ function undo.record_deletion(undo_state, line, col, text, editor)
 end
 
 function undo.perform_undo(undo_state, editor, buffer_obj)
-    undo.finish_edit_group(undo_state)
-    
+    undo.finish_edit_group(undo_state, editor)
+
     if #undo_state.undo_stack == 0 then
         return false
     end
