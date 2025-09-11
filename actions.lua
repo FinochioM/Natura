@@ -655,8 +655,28 @@ function actions.tab_or_indent(ed, buf)
     end
 end
 
+
+local function get_comment_prefix(filepath)
+    if not filepath then return "// " end
+    
+    local ext = filepath:match("%.([^%.]+)$")
+    if not ext then return "// " end
+    
+    ext = ext:lower()
+    
+    if ext == "lua" then
+        return "-- "
+    elseif ext == "py" or ext == "python" then
+        return "# "
+    elseif ext == "js" or ext == "c" or ext == "cpp" or ext == "h" or ext == "hpp" or ext == "java" then
+        return "// "
+    else
+        return "// "
+    end
+end
+
 function actions.toggle_comment(ed, buf)
-    local comment_prefix = "// "
+    local comment_prefix = get_comment_prefix(buf.filepath)
     
     if editor.has_selection(ed) then
         local bounds = editor.get_selection_bounds(ed)
@@ -667,7 +687,7 @@ function actions.toggle_comment(ed, buf)
         for line_num = bounds.start_line, bounds.end_line do
             local line = buf.lines[line_num]
             local trimmed = line:match("^%s*(.*)$")
-            if not trimmed:sub(1, #comment_prefix) == comment_prefix then
+            if trimmed:sub(1, #comment_prefix) ~= comment_prefix then
                 all_commented = false
                 break
             end
