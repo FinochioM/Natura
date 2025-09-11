@@ -145,6 +145,9 @@ function keymap.handle_key(key, ed, buf)
         elseif key == "delete" then
             actions.delete_word_right(ed, buf)
             return true
+        elseif key == "d" and shift then
+            actions.duplicate_lines(ed, buf)
+            return true
         end
     end
     
@@ -200,7 +203,18 @@ function keymap.handle_key(key, ed, buf)
         end
         require("editor").update_viewport(ed, buf)
         return true
-        
+
+    elseif key == "delete" and shift then
+        actions.delete_line(ed, buf)
+        return true
+    elseif love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt") then
+        if key == "up" then
+            actions.move_lines_up(ed, buf)
+            return true
+        elseif key == "down" then
+            actions.move_lines_down(ed, buf)
+            return true
+        end
     elseif key == "home" then
         actions.jump_to_line_start(ed, buf, shift)
         return true

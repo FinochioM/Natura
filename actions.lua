@@ -358,4 +358,154 @@ function actions.delete_word_right(ed, buf)
     end
 end
 
+function actions.duplicate_lines(ed, buf)
+    local start_line, end_line
+    
+    if editor.has_selection(ed) then
+        local bounds = editor.get_selection_bounds(ed)
+        start_line = bounds.start_line
+        end_line = bounds.end_line
+    else
+        start_line = ed.cursor_line
+        end_line = ed.cursor_line
+    end
+    
+    local lines_to_duplicate = {}
+    for i = start_line, end_line do
+        table.insert(lines_to_duplicate, buf.lines[i])
+    end
+    
+    local undo = require("undo")
+    undo.start_edit_group(ed.undo_state, ed)
+    
+    for i = #lines_to_duplicate, 1, -1 do
+        table.insert(buf.lines, end_line + 1, lines_to_duplicate[i])
+        undo.record_insertion(ed.undo_state, end_line + 1, 0, lines_to_duplicate[i] .. "\n", ed)
+    end
+    
+    undo.finish_edit_group(ed.undo_state, ed)
+    
+    ed.cursor_line = end_line + #lines_to_duplicate
+    
+    if editor.has_selection(ed) then
+        ed.selection.start_line = start_line + #lines_to_duplicate
+        ed.selection.end_line = end_line + #lines_to_duplicate
+        editor.update_selection(ed)
+    end
+    
+    buffer.mark_dirty(buf)
+    editor.update_viewport(ed, buf)
+end
+
+function actions.delete_line(ed, buf)
+    if #buf.lines <= 1 then
+        local undo = require("undo")
+        local old_content = buf.lines[1]
+        undo.record_deletion(ed.undo_state, 1, 0, old_content, ed)
+        buf.lines[1] = ""
+        ed.cursor_col = 0
+        buffer.mark_dirty(buf)
+        editor.clear_selection(ed)
+        editor.update_viewport(ed, buf)
+        return
+    end
+    
+    local line_to_delete = ed.cursor_line
+    local undo = require("undo")
+    
+    undo.record_deletion(ed.undo_state, line_to_delete, 0, buf.lines[line_to_delete] .. "\n", ed)
+    table.remove(buf.lines, line_to_delete)
+    
+    if ed.cursor_line > #buf.lines then
+        ed.cursor_line = #buf.lines
+    end
+    
+    local line = buf.lines[ed.cursor_line]
+    ed.cursor_col = math.min(ed.cursor_col, #line)
+    
+    buffer.mark_dirty(buf)
+    editor.clear_selection(ed)
+    editor.update_viewport(ed, buf)
+end
+
+function actions.move_lines_up(ed, buf)
+    local start_line, end_line
+    
+    if editor.has_selection(ed) then
+        local bounds = editor.get_selection_bounds(ed)
+        start_line = bounds.start_line
+        end_line = bounds.end_line
+    else
+        start_line = ed.cursor_line
+        end_line = ed.cursor_line
+    end
+    
+    if start_line <= 1 then
+        return
+    end
+    
+    local undo = require("undo")
+    undo.start_edit_group(ed.undo_state, ed)
+    
+    local line_above = buf.lines[start_line - 1]
+    table.remove(buf.lines, start_line - 1)
+    table.insert(buf.lines, end_line, line_above)
+    
+    undo.record_deletion(ed.undo_state, start_line - 1, 0, line_above .. "\n", ed)
+    undo.record_insertion(ed.undo_state, end_line, 0, line_above .. "\n", ed)
+    
+    undo.finish_edit_group(ed.undo_state, ed)
+    
+    ed.cursor_line = ed.cursor_line - 1
+    
+    if editor.has_selection(ed) then
+        ed.selection.start_line = start_line - 1
+        ed.selection.end_line = end_line - 1
+        editor.update_selection(ed)
+    end
+    
+    buffer.mark_dirty(buf)
+    editor.update_viewport(ed, buf)
+end
+
+function actions.move_lines_down(ed, buf)
+    local start_line, end_line
+    
+    if editor.has_selection(ed) then
+        local bounds = editor.get_selection_bounds(ed)
+        start_line = bounds.start_line
+        end_line = bounds.end_line
+    else
+        start_line = ed.cursor_line
+        end_line = ed.cursor_line
+    end
+    
+    if end_line >= #buf.lines then
+        return
+    end
+    
+    local undo = require("undo")
+    undo.start_edit_group(ed.undo_state, ed)
+    
+    local line_below = buf.lines[end_line + 1]
+    table.remove(buf.lines, end_line + 1)
+    table.insert(buf.lines, start_line, line_below)
+    
+    undo.record_deletion(ed.undo_state, end_line + 1, 0, line_below .. "\n", ed)
+    undo.record_insertion(ed.undo_state, start_line, 0, line_below .. "\n", ed)
+    
+    undo.finish_edit_group(ed.undo_state, ed)
+    
+    ed.cursor_line = ed.cursor_line + 1
+    
+    if editor.has_selection(ed) then
+        ed.selection.start_line = start_line + 1
+        ed.selection.end_line = end_line + 1
+        editor.update_selection(ed)
+    end
+    
+    buffer.mark_dirty(buf)
+    editor.update_viewport(ed, buf)
+end
+
 return actions
