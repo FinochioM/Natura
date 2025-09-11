@@ -94,6 +94,14 @@ function love.update(dt)
             editor.update_viewport(current_editor, current_buffer)
         end
     end
+    
+    local undo = require("undo")
+    if current_editor.undo_state.current_group then
+        local time_since_last = love.timer.getTime() - current_editor.undo_state.last_action_time
+        if time_since_last > 1.0 then
+            undo.finish_edit_group(current_editor.undo_state, current_editor)
+        end
+    end
 end
 
 local function draw_search_highlights(ed, font, line_height, content_start_y)

@@ -25,11 +25,16 @@ function undo.start_edit_group(undo_state, editor)
     undo_state.last_action_time = love.timer.getTime()
 end
 
-function undo.finish_edit_group(undo_state)
+function undo.finish_edit_group(undo_state, editor)
     if not undo_state.current_group or #undo_state.current_group.edits == 0 then
         undo_state.current_group = nil
         return
     end
+    
+    undo_state.current_group.cursor_after = {
+        line = editor.cursor_line,
+        col = editor.cursor_col
+    }
     
     table.insert(undo_state.undo_stack, undo_state.current_group)
     undo_state.redo_stack = {}
@@ -75,7 +80,7 @@ function undo.record_deletion(undo_state, line, col, text, editor)
     })
 end
 
-function undo.perform_undo(undo_state, editor, buffer)
+function undo.perform_undo(undo_state, editor, buffer_obj)
     undo.finish_edit_group(undo_state)
     
     if #undo_state.undo_stack == 0 then
@@ -83,13 +88,14 @@ function undo.perform_undo(undo_state, editor, buffer)
     end
     
     local edit_group = table.remove(undo_state.undo_stack)
+    local buffer_module = require("buffer")
     
     for i = #edit_group.edits, 1, -1 do
         local edit = edit_group.edits[i]
         if edit.type == "insert" then
-            buffer.delete_text(buffer, edit.line, edit.col, #edit.text)
+            buffer_module.delete_text(buffer_obj, edit.line, edit.col, #edit.text)
         elseif edit.type == "delete" then
-            buffer.insert_text(buffer, edit.line, edit.col, edit.text)
+            buffer_module.insert_text(buffer_obj, edit.line, edit.col, edit.text)
         end
     end
     
@@ -98,23 +104,24 @@ function undo.perform_undo(undo_state, editor, buffer)
     
     table.insert(undo_state.redo_stack, edit_group)
     
-    require("editor").update_viewport(editor, buffer)
+    require("editor").update_viewport(editor, buffer_obj)
     return true
 end
 
-function undo.perform_redo(undo_state, editor, buffer)
+function undo.perform_redo(undo_state, editor, buffer_obj)
     if #undo_state.redo_stack == 0 then
         return false
     end
     
     local edit_group = table.remove(undo_state.redo_stack)
+    local buffer_module = require("buffer")
     
     for i = 1, #edit_group.edits do
         local edit = edit_group.edits[i]
         if edit.type == "insert" then
-            buffer.insert_text(buffer, edit.line, edit.col, edit.text)
+            buffer_module.insert_text(buffer_obj, edit.line, edit.col, edit.text)
         elseif edit.type == "delete" then
-            buffer.delete_text(buffer, edit.line, edit.col, #edit.text)
+            buffer_module.delete_text(buffer_obj, edit.line, edit.col, #edit.text)
         end
     end
     
@@ -125,7 +132,7 @@ function undo.perform_redo(undo_state, editor, buffer)
     
     table.insert(undo_state.undo_stack, edit_group)
     
-    require("editor").update_viewport(editor, buffer)
+    require("editor").update_viewport(editor, buffer_obj)
     return true
 end
 

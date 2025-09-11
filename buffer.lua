@@ -159,10 +159,10 @@ function buffer.join_lines(buf, cursor_line)
 end
 
 function buffer.delete_text(buf, line, col, length)
-    if line < 1 or line > #buf.lines then return end
+    if line < 1 or line > #buf.lines then return "" end
     
     local line_content = buf.lines[line]
-    if col < 0 or col >= #line_content then return end
+    if col < 0 or col >= #line_content then return "" end
     
     local end_col = math.min(col + length, #line_content)
     local deleted_text = string.sub(line_content, col + 1, end_col)
