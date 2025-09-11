@@ -139,6 +139,12 @@ function keymap.handle_key(key, ed, buf)
         elseif key == "y" then
             actions.redo(ed, buf)
             return true
+        elseif key == "backspace" then
+            actions.delete_word_left(ed, buf)
+            return true
+        elseif key == "delete" then
+            actions.delete_word_right(ed, buf)
+            return true
         end
     end
     

@@ -274,4 +274,88 @@ function actions.redo(ed, buf)
     undo.perform_redo(ed.undo_state, ed, buf)
 end
 
+function actions.delete_word_left(ed, buf)
+    if editor.has_selection(ed) then
+        actions.delete_selection(ed, buf)
+        return
+    end
+    
+    local line = buf.lines[ed.cursor_line]
+    local start_col = ed.cursor_col
+    local new_col = ed.cursor_col
+
+    if new_col > 0 then
+        new_col = new_col - 1
+        
+        while new_col > 0 and string.match(string.sub(line, new_col + 1, new_col + 1), "%s") do
+            new_col = new_col - 1
+        end
+        
+        if new_col > 0 then
+            local char = string.sub(line, new_col + 1, new_col + 1)
+            if string.match(char, "%w") then
+                while new_col > 0 and string.match(string.sub(line, new_col, new_col), "%w") do
+                    new_col = new_col - 1
+                end
+            else
+                while new_col > 0 and not string.match(string.sub(line, new_col, new_col), "[%w%s]") do
+                    new_col = new_col - 1
+                end
+            end
+        end
+    end
+
+    if new_col < start_col then
+        local deleted_text = string.sub(line, new_col + 1, start_col)
+        local undo = require("undo")
+        undo.record_deletion(ed.undo_state, ed.cursor_line, new_col, deleted_text, ed)
+        
+        buffer.delete_text(buf, ed.cursor_line, new_col, start_col - new_col)
+        ed.cursor_col = new_col
+        editor.update_viewport(ed, buf)
+    end
+end
+
+function actions.delete_word_right(ed, buf)
+    if editor.has_selection(ed) then
+        actions.delete_selection(ed, buf)
+        return
+    end
+    
+    local line = buf.lines[ed.cursor_line]
+    local start_col = ed.cursor_col
+    local new_col = ed.cursor_col
+
+    if new_col < #line then
+        local char = string.sub(line, new_col + 1, new_col + 1)
+        
+        if string.match(char, "%w") then
+            while new_col < #line and string.match(string.sub(line, new_col + 1, new_col + 1), "%w") do
+                new_col = new_col + 1
+            end
+        elseif string.match(char, "%s") then
+            while new_col < #line and string.match(string.sub(line, new_col + 1, new_col + 1), "%s") do
+                new_col = new_col + 1
+            end
+        else
+            while new_col < #line and not string.match(string.sub(line, new_col + 1, new_col + 1), "[%w%s]") do
+                new_col = new_col + 1
+            end
+        end
+        
+        while new_col < #line and string.match(string.sub(line, new_col + 1, new_col + 1), "%s") do
+            new_col = new_col + 1
+        end
+    end
+
+    if new_col > start_col then
+        local deleted_text = string.sub(line, start_col + 1, new_col)
+        local undo = require("undo")
+        undo.record_deletion(ed.undo_state, ed.cursor_line, start_col, deleted_text, ed)
+        
+        buffer.delete_text(buf, ed.cursor_line, start_col, new_col - start_col)
+        editor.update_viewport(ed, buf)
+    end
+end
+
 return actions

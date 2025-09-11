@@ -15,5 +15,5 @@
     + Files have empty lines when opened from the editor. FIXED.
 
 # QOL:
-    + CTRL+Backspace should delete the entire word.
+    + CTRL+Backspace should delete the entire word. DONE.
     + Customization like focus.
