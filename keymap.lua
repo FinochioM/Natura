@@ -148,6 +148,9 @@ function keymap.handle_key(key, ed, buf)
         elseif key == "d" and shift then
             actions.duplicate_lines(ed, buf)
             return true
+        elseif key == "/" then
+            actions.toggle_comment(ed, buf)
+            return true
         end
     end
     

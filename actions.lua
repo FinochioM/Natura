@@ -655,4 +655,84 @@ function actions.tab_or_indent(ed, buf)
     end
 end
 
+function actions.toggle_comment(ed, buf)
+    local comment_prefix = "// "
+    
+    if editor.has_selection(ed) then
+        local bounds = editor.get_selection_bounds(ed)
+        local undo = require("undo")
+        undo.start_edit_group(ed.undo_state, ed)
+        
+        local all_commented = true
+        for line_num = bounds.start_line, bounds.end_line do
+            local line = buf.lines[line_num]
+            local trimmed = line:match("^%s*(.*)$")
+            if not trimmed:sub(1, #comment_prefix) == comment_prefix then
+                all_commented = false
+                break
+            end
+        end
+        
+        for line_num = bounds.start_line, bounds.end_line do
+            local line = buf.lines[line_num]
+            
+            if all_commented then
+                local leading_spaces = line:match("^(%s*)")
+                local rest = line:sub(#leading_spaces + 1)
+                
+                if rest:sub(1, #comment_prefix) == comment_prefix then
+                    local new_line = leading_spaces .. rest:sub(#comment_prefix + 1)
+                    undo.record_deletion(ed.undo_state, line_num, #leading_spaces, comment_prefix, ed)
+                    buf.lines[line_num] = new_line
+                end
+            else
+                local leading_spaces = line:match("^(%s*)")
+                local new_line = leading_spaces .. comment_prefix .. line:sub(#leading_spaces + 1)
+                undo.record_insertion(ed.undo_state, line_num, #leading_spaces, comment_prefix, ed)
+                buf.lines[line_num] = new_line
+            end
+        end
+        
+        undo.finish_edit_group(ed.undo_state, ed)
+        
+        if not all_commented then
+            ed.selection.end_col = ed.selection.end_col + #comment_prefix
+            ed.cursor_col = ed.cursor_col + #comment_prefix
+        else
+            ed.selection.end_col = math.max(0, ed.selection.end_col - #comment_prefix)
+            ed.cursor_col = math.max(0, ed.cursor_col - #comment_prefix)
+        end
+        
+        buffer.mark_dirty(buf)
+        editor.update_viewport(ed, buf)
+    else
+        local line = buf.lines[ed.cursor_line]
+        local leading_spaces = line:match("^(%s*)")
+        local rest = line:sub(#leading_spaces + 1)
+        
+        local undo = require("undo")
+        
+        if rest:sub(1, #comment_prefix) == comment_prefix then
+            local new_line = leading_spaces .. rest:sub(#comment_prefix + 1)
+            undo.record_deletion(ed.undo_state, ed.cursor_line, #leading_spaces, comment_prefix, ed)
+            buf.lines[ed.cursor_line] = new_line
+            
+            if ed.cursor_col > #leading_spaces then
+                ed.cursor_col = math.max(#leading_spaces, ed.cursor_col - #comment_prefix)
+            end
+        else
+            local new_line = leading_spaces .. comment_prefix .. rest
+            undo.record_insertion(ed.undo_state, ed.cursor_line, #leading_spaces, comment_prefix, ed)
+            buf.lines[ed.cursor_line] = new_line
+            
+            if ed.cursor_col >= #leading_spaces then
+                ed.cursor_col = ed.cursor_col + #comment_prefix
+            end
+        end
+        
+        buffer.mark_dirty(buf)
+        editor.update_viewport(ed, buf)
+    end
+end
+
 return actions
