@@ -55,6 +55,10 @@ function love.textinput(text)
             local actions = require("actions")
             actions.delete_selection(current_editor, current_buffer)
         end
+        
+        local undo = require("undo")
+        undo.record_insertion(current_editor.undo_state, current_editor.cursor_line, current_editor.cursor_col, text, current_editor)
+        
         current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)
         editor.update_viewport(current_editor, current_buffer)
     end

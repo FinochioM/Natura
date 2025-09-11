@@ -133,6 +133,12 @@ function keymap.handle_key(key, ed, buf)
         elseif key == "u" then
             actions.delete_to_line_start(ed, buf)
             return true
+        elseif key == "z" then
+            actions.undo(ed, buf)
+            return true
+        elseif key == "y" then
+            actions.redo(ed, buf)
+            return true
         end
     end
     

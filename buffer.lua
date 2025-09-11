@@ -158,4 +158,19 @@ function buffer.join_lines(buf, cursor_line)
     return new_cursor_col
 end
 
+function buffer.delete_text(buf, line, col, length)
+    if line < 1 or line > #buf.lines then return end
+    
+    local line_content = buf.lines[line]
+    if col < 0 or col >= #line_content then return end
+    
+    local end_col = math.min(col + length, #line_content)
+    local deleted_text = string.sub(line_content, col + 1, end_col)
+    
+    buf.lines[line] = string.sub(line_content, 1, col) .. string.sub(line_content, end_col + 1)
+    buffer.mark_dirty(buf)
+    
+    return deleted_text
+end
+
 return buffer

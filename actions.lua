@@ -264,4 +264,14 @@ function actions.move_word_right(ed, buf, extend_selection)
     editor.update_viewport(ed, buf)
 end
 
+function actions.undo(ed, buf)
+    local undo = require("undo")
+    undo.perform_undo(ed.undo_state, ed, buf)
+end
+
+function actions.redo(ed, buf)
+    local undo = require("undo")
+    undo.perform_redo(ed.undo_state, ed, buf)
+end
+
 return actions
