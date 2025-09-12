@@ -1,4 +1,5 @@
 local langs = require("langs.init")
+local syntax = require("syntax")
 
 local buffer = {}
 
@@ -52,6 +53,8 @@ function buffer.load_file(buf, filepath)
     buf.original_timestamp = love.filesystem.getInfo(filepath) and love.filesystem.getInfo(filepath).modtime or 0
     buf.language = detect_language(filepath)
     
+    syntax.tokenize_buffer(buf)
+    
     print("Loaded file: " .. filepath .. (buf.language and (" (detected: " .. buf.language .. ")") or ""))
     return true
 end
@@ -71,6 +74,8 @@ function buffer.load_file_external(buf, filepath)
     buf.dirty = false
     buf.last_modified = buffer.get_file_mtime(filepath)
     buf.language = detect_language(filepath)
+    
+    syntax.tokenize_buffer(buf)
     
     print("Loaded: " .. filepath .. (buf.language and (" (detected: " .. buf.language .. ")") or ""))
     return true

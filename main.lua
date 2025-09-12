@@ -5,6 +5,7 @@ local keymap = require("keymap")
 local search = require("search")
 local langs = require("langs.init")
 local colors = require("colors") 
+local syntax = require("syntax")
 
 local current_buffer
 local current_editor
@@ -371,14 +372,14 @@ function draw_selection_highlight(ed, font, line_height, content_start_y)
     end
 end
 
-function draw_line_with_syntax_highlighting(line, x, y, language)
+function draw_line_with_syntax_highlighting(line, x, y, line_num, language)
     if not language then
         colors.set_color("code_default")
         love.graphics.print(line, x, y)
         return
     end
     
-    local tokens = langs.tokenize_buffer(language, line)
+    local tokens = syntax.get_line_tokens(current_buffer, line_num)
     
     if #tokens == 0 then
         colors.set_color("code_default") 
@@ -458,9 +459,9 @@ function love.draw()
         local line = current_buffer.lines[i]
         local y = content_start_y + (i - current_editor.viewport.top_line) * line_height
         
-        draw_line_with_syntax_highlighting(line, 10, y, current_buffer.language)
+        draw_line_with_syntax_highlighting(line, 10, y, i, current_buffer.language) -- Pass line number
     end
-    
+        
     if current_editor.cursor_line >= current_editor.viewport.top_line and 
        current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
         local cursor_y = content_start_y + (current_editor.cursor_line - current_editor.viewport.top_line) * line_height
