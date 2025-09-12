@@ -4,15 +4,23 @@ local lfs = require("lfs")
 
 local default_config = {
     tab_size = 4,
-    indent_using = "spaces", -- "spaces" or "tabs"
+    indent_using = "spaces",
     window_width = 800,
-    window_height = 600
+    window_height = 600,
+    keybinds = {}
 }
 
 local current_config = {}
 
 for k, v in pairs(default_config) do
-    current_config[k] = v
+    if type(v) == "table" then
+        current_config[k] = {}
+        for k2, v2 in pairs(v) do
+            current_config[k][k2] = v2
+        end
+    else
+        current_config[k] = v
+    end
 end
 
 function config.get(key)
@@ -67,21 +75,36 @@ function config.load()
                         key = key:match("^%s*(.-)%s*$") -- trim key
                         value = value:match("^%s*(.-)%s*$") -- trim value
                         
+                        local main_key, sub_key = key:match("^([^%.]+)%.(.+)$")
+                        
+                        local final_value
                         if value == "true" then
-                            current_config[key] = true
+                            final_value = true
                         elseif value == "false" then
-                            current_config[key] = false
+                            final_value = false
                         elseif tonumber(value) then
-                            current_config[key] = tonumber(value)
+                            final_value = tonumber(value)
                         else
-                            current_config[key] = value
+                            final_value = value
                         end
                         
-                        print("Loaded config: " .. key .. " = " .. tostring(current_config[key]))
+                        if main_key and sub_key then
+                            if not current_config[main_key] then
+                                current_config[main_key] = {}
+                            end
+                            current_config[main_key][sub_key] = final_value
+                            print("Loaded config: " .. main_key .. "." .. sub_key .. " = " .. tostring(final_value))
+                        else
+                            current_config[key] = final_value
+                            print("Loaded config: " .. key .. " = " .. tostring(final_value))
+                        end
                     end
                 end
             end
         end
+        
+        local keymap = require("keymap")
+        keymap.load_keybinds()
     else
         config.save()
     end
@@ -91,7 +114,13 @@ function config.save()
     local content = "# Natura Editor Configuration\n\n"
     
     for key, value in pairs(current_config) do
-        content = content .. key .. ": " .. tostring(value) .. "\n"
+        if type(value) == "table" then
+            for sub_key, sub_value in pairs(value) do
+                content = content .. key .. "." .. sub_key .. ": " .. tostring(sub_value) .. "\n"
+            end
+        else
+            content = content .. key .. ": " .. tostring(value) .. "\n"
+        end
     end
     
     if write_file("natura.config", content) then
