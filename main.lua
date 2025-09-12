@@ -442,6 +442,10 @@ function love.draw()
         end
     end
     love.graphics.print(title, 10, 10)
+
+    colors.set_color("ui_success")
+    local debug_lang = "" .. (current_buffer.language or "None")
+    love.graphics.print(debug_lang, love.graphics.getWidth() - 50, 10)
     
     local font = love.graphics.getFont()
     local line_height = font:getHeight()
@@ -488,7 +492,6 @@ function love.draw()
     if current_editor.search.active then
         debug_text = debug_text .. " [SEARCH]"
     end
-    
     love.graphics.print(debug_text, 10, love.graphics.getHeight() - 20)
 end
 

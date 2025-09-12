@@ -17,6 +17,8 @@
     + Multi line comment does not work. When I select more than one line, if I press CTRL+/ it should comment all the lines. FIXED.
     + CTRL+Z and CTRL+Y not workin properly.
     + CTRL+V when pasting something from outside the editor does not work.
+    + CTRL+F crashes when I try to type something to search on the search bar.
+    + CTRL+SHIFT+Right/Left arrows to select still selects letter by letter, instead of word by word.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
