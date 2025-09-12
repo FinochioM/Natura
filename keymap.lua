@@ -2,54 +2,18 @@ local keymap = {}
 local actions = require("actions")
 local search = require("search")
 
-local default_keybinds = {
-    ["ctrl+s"] = "save",
-    ["ctrl+f"] = "search", 
-    ["ctrl+g"] = "goto_line",
-    ["ctrl+c"] = "copy",
-    ["ctrl+v"] = "paste", 
-    ["ctrl+x"] = "cut",
-    ["ctrl+a"] = "select_all",
-    ["ctrl+d"] = "select_word",
-    ["ctrl+o"] = "open_file",
-    ["ctrl+z"] = "undo",
-    ["ctrl+y"] = "redo",
-    ["ctrl+k"] = "delete_to_line_end",
-    ["ctrl+u"] = "delete_to_line_start",
-    ["ctrl+backspace"] = "delete_word_left",
-    ["ctrl+delete"] = "delete_word_right",
-    ["ctrl+shift+d"] = "duplicate_lines",
-    ["ctrl+/"] = "toggle_comment",
-    ["f3"] = "find_next",
-    ["shift+f3"] = "find_previous",
-    ["alt+up"] = "move_lines_up",
-    ["alt+down"] = "move_lines_down",
-    ["tab"] = "tab_or_indent",
-    ["shift+tab"] = "unindent",
-    ["ctrl+home"] = "file_start",
-    ["ctrl+end"] = "file_end",
-    ["ctrl+left"] = "word_left",
-    ["ctrl+right"] = "word_right",
-    ["home"] = "line_start",
-    ["end"] = "line_end",
-    ["shift+delete"] = "delete_line",
-    ["escape"] = "clear_selection"
-}
-
 local current_keybinds = {}
 
 function keymap.load_keybinds()
     local config = require("config")
     
-    current_keybinds = {}
-    for key, action in pairs(default_keybinds) do
-        current_keybinds[key] = action
+    current_keybinds = config.get("keybinds") or {}
+    
+    if not next(current_keybinds) then
+        error("FATAL: No keybinds loaded from config!")
     end
     
-    local user_keybinds = config.get("keybinds") or {}
-    for key, action in pairs(user_keybinds) do
-        current_keybinds[key] = action
-    end
+    print("Loaded keybinds from config")
 end
 
 local function get_key_string(key, ctrl, shift, alt)
@@ -332,7 +296,5 @@ function keymap.handle_key(key, ed, buf)
     
     return handled
 end
-
-keymap.load_keybinds()
 
 return keymap

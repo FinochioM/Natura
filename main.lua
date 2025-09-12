@@ -14,6 +14,9 @@ function love.load(args)
     local config = require("config")
     config.load()
 
+    local keymap = require("keymap")
+    keymap.load_keybinds()
+
     love.window.setTitle("Natura Editor")
     local window_width = config.get("window_width")
     local window_height = config.get("window_height")
