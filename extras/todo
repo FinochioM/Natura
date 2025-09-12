@@ -25,3 +25,4 @@
     + CTRL+Backspace should delete the entire word. DONE.
     + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]
     + When i am writing code and I press enter to move to the new line, the cursor should maintain the indentation from the previous line.
+    + Color preview with test code when modifying the "colors" section in global file.

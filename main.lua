@@ -6,6 +6,7 @@ local search = require("search")
 local langs = require("langs.init")
 local colors = require("colors") 
 local syntax = require("syntax")
+local color_preview = require("color_preview")
 
 local current_buffer
 local current_editor
@@ -83,6 +84,10 @@ function love.keypressed(key)
     if not keymap.handle_key(key, current_editor, current_buffer) then
         print("Unhandled key: " .. key)
     end
+
+    if color_preview.handle_key(key) then
+        return
+    end
 end
 
 function love.wheelmoved(x, y)
@@ -117,6 +122,8 @@ function love.update(dt)
             undo.finish_edit_group(current_editor.undo_state, current_editor)
         end
     end
+
+    color_preview.update(current_editor, current_buffer)
 end
 
 local function draw_selection_highlight(ed, font, line_height, content_start_y)
@@ -449,6 +456,7 @@ function love.draw()
     draw_search_bar(current_editor)
     draw_goto_bar(current_editor)
     draw_file_dialog(current_editor)
+    color_preview.draw()
     
     colors.set_color("text_dim")
     local debug_text = string.format("Line %d/%d (showing %d-%d)", 
