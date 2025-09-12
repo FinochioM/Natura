@@ -5,48 +5,59 @@ local editor = require("editor")
 local clipboard_text = ""
 
 function actions.copy(ed, buf)
+    local text_to_copy
     if editor.has_selection(ed) then
-        clipboard_text = editor.get_selected_text(ed, buf)
+        text_to_copy = editor.get_selected_text(ed, buf)
     else
-        clipboard_text = buf.lines[ed.cursor_line] or ""
+        text_to_copy = buf.lines[ed.cursor_line] or ""
     end
-    print("Copied: " .. clipboard_text:sub(1, 50) .. (clipboard_text:len() > 50 and "..." or ""))
+    
+    clipboard_text = text_to_copy
+    love.system.setClipboardText(text_to_copy)
+    
+    print("Copied: " .. text_to_copy:sub(1, 50) .. (text_to_copy:len() > 50 and "..." or ""))
 end
 
 function actions.paste(ed, buf)
-    if clipboard_text ~= "" then
+    local text_to_paste = love.system.getClipboardText()
+    
+    if text_to_paste == "" then
+        text_to_paste = clipboard_text
+    end
+    
+    if text_to_paste ~= "" then
         if editor.has_selection(ed) then
             actions.delete_selection(ed, buf)
         end
 
         local lines = {}
-        for line in clipboard_text:gmatch("([^\n]*)\n?") do
-            table.insert(lines, line)
+        for line in text_to_paste:gmatch("([^\n]*)\n?") do
+            if line ~= "" or text_to_paste:find("\n") then
+                table.insert(lines, line)
+            end
         end
+        
+        if #lines == 0 then
+            lines = {text_to_paste}
+        end
+
+        local undo = require("undo")
+        undo.record_insertion(ed.undo_state, ed.cursor_line, ed.cursor_col, text_to_paste, ed)
 
         if #lines == 1 then
-            ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, lines[1])
+            ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, text_to_paste)
         else
-            local current_line = buf.lines[ed.cursor_line]
-            local before = string.sub(current_line, 1, ed.cursor_col)
-            local after = string.sub(current_line, ed.cursor_col + 1)
-
-            buf.lines[ed.cursor_line] = before .. lines[1]
-
-            for i = 2, #lines - 1 do
-                table.insert(buf.lines, ed.cursor_line + i - 1, lines[i])
+            local first_line = lines[1]
+            ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, first_line)
+            
+            for i = 2, #lines do
+                buffer.split_line(buf, ed.cursor_line, ed.cursor_col)
+                ed.cursor_line = ed.cursor_line + 1
+                ed.cursor_col = 0
+                ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, lines[i])
             end
-
-            if #lines > 1 then
-                table.insert(buf.lines, ed.cursor_line + #lines - 1, lines[#lines] .. after)
-                ed.cursor_line = ed.cursor_line + #lines - 1
-                ed.cursor_col = #lines[#lines]
-            end
-
-            buffer.mark_dirty(buf)
         end
 
-        editor.clear_selection(ed)
         editor.update_viewport(ed, buf)
     end
 end
