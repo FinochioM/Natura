@@ -70,7 +70,9 @@ function buffer.load_file_external(buf, filepath)
     buf.filepath = filepath
     buf.dirty = false
     buf.last_modified = buffer.get_file_mtime(filepath)
-    print("Loaded: " .. filepath)
+    buf.language = detect_language(filepath)
+    
+    print("Loaded: " .. filepath .. (buf.language and (" (detected: " .. buf.language .. ")") or ""))
     return true
 end
 
@@ -86,11 +88,18 @@ end
 function buffer.reload_from_disk(buf)
     if not buf.filepath then return false end
     
+    local success
     if buf.filepath:find("^[A-Za-z]:\\") or buf.filepath:find("^/") then
-        return buffer.load_file_external(buf, buf.filepath)
+        success = buffer.load_file_external(buf, buf.filepath)
     else
-        return buffer.load_file(buf, buf.filepath)
+        success = buffer.load_file(buf, buf.filepath)
     end
+    
+    if success and not buf.language then
+        buf.language = detect_language(buf.filepath)
+    end
+    
+    return success
 end
 
 function buffer.split_lines(content)

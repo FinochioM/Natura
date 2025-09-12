@@ -416,12 +416,12 @@ end
 function get_color_for_token_type(token_type)
     local color_map = {
         ["keyword"] = "code_keyword",
-        ["string_literal"] = "code_string_literal", 
+        ["string_literal"] = "code_string_literal",
         ["comment"] = "code_comment",
-        ["function"] = "code_function",
-        ["number"] = "code_default",
-        ["identifier"] = "code_default",
-        ["punctuation"] = "code_default",
+        ["function"] = "code_function", 
+        ["number"] = "code_number",
+        ["identifier"] = "code_identifier",
+        ["punctuation"] = "code_punctuation",
         ["default"] = "code_default"
     }
     return color_map[token_type] or "code_default"
