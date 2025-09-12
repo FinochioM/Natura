@@ -4,6 +4,7 @@ local editor = require("editor")
 local keymap = require("keymap")
 local search = require("search")
 local langs = require("langs.init")
+local colors = require("colors") 
 
 local current_buffer
 local current_editor
@@ -426,9 +427,7 @@ function get_color_for_token_type(token_type)
     return color_map[token_type] or "code_default"
 end
 
-function love.draw()
-    local colors = require("colors")
-    
+function love.draw()    
     local bg_color = colors.get("background")
     love.graphics.clear(bg_color[1], bg_color[2], bg_color[3], bg_color[4])
     
