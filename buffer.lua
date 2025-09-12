@@ -1,3 +1,5 @@
+local langs = require("langs.init")
+
 local buffer = {}
 
 function buffer.create()
@@ -17,17 +19,40 @@ function buffer.get_file_mtime(filepath)
     return attr and attr.modification or 0
 end
 
-function buffer.load_file(buf, filename)
-    local content = love.filesystem.read(filename)
-    if not content then
-        print("Could not read file: " .. filename)
+local function detect_language(filepath)
+    if not filepath then return nil end
+    local extension = filepath:match("%.([^./\\]+)$")
+    if extension then
+        return langs.get_language_from_extension("." .. extension)
+    end
+    return nil
+end
+
+function buffer.load_file(buf, filepath)
+    local file = io.open(filepath, "r")
+    if not file then 
+        print("Error: Cannot open file " .. filepath)
         return false
     end
     
-    buf.lines = buffer.split_lines(content)
-    buf.filepath = filename
+    local content = file:read("*all")
+    file:close()
+    
+    buf.lines = {}
+    for line in content:gmatch("([^\r\n]*)\r?\n?") do
+        table.insert(buf.lines, line)
+    end
+    
+    if #buf.lines == 0 then
+        buf.lines = {""}
+    end
+    
+    buf.filepath = filepath
     buf.dirty = false
-    buf.last_modified = buffer.get_file_mtime(filename)
+    buf.original_timestamp = love.filesystem.getInfo(filepath) and love.filesystem.getInfo(filepath).modtime or 0
+    buf.language = detect_language(filepath)
+    
+    print("Loaded file: " .. filepath .. (buf.language and (" (detected: " .. buf.language .. ")") or ""))
     return true
 end
 

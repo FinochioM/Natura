@@ -3,6 +3,7 @@ local buffer = require("buffer")
 local editor = require("editor")
 local keymap = require("keymap")
 local search = require("search")
+local langs = require("langs.init")
 
 local current_buffer
 local current_editor
@@ -369,6 +370,62 @@ function draw_selection_highlight(ed, font, line_height, content_start_y)
     end
 end
 
+function draw_line_with_syntax_highlighting(line, x, y, language)
+    if not language then
+        colors.set_color("code_default")
+        love.graphics.print(line, x, y)
+        return
+    end
+    
+    local tokens = langs.tokenize_buffer(language, line)
+    
+    if #tokens == 0 then
+        colors.set_color("code_default") 
+        love.graphics.print(line, x, y)
+        return
+    end
+    
+    local current_x = x
+    local last_end = 1
+    
+    for _, token in ipairs(tokens) do
+        if token.start > last_end then
+            local before_text = line:sub(last_end, token.start - 1)
+            colors.set_color("code_default")
+            love.graphics.print(before_text, current_x, y)
+            current_x = current_x + love.graphics.getFont():getWidth(before_text)
+        end
+        
+        local token_text = line:sub(token.start, token.start + token.length - 1)
+        local color_name = get_color_for_token_type(token.type)
+        colors.set_color(color_name)
+        love.graphics.print(token_text, current_x, y)
+        current_x = current_x + love.graphics.getFont():getWidth(token_text)
+        
+        last_end = token.start + token.length
+    end
+    
+    if last_end <= #line then
+        local remaining_text = line:sub(last_end)
+        colors.set_color("code_default")
+        love.graphics.print(remaining_text, current_x, y)
+    end
+end
+
+function get_color_for_token_type(token_type)
+    local color_map = {
+        ["keyword"] = "code_keyword",
+        ["string_literal"] = "code_string_literal", 
+        ["comment"] = "code_comment",
+        ["function"] = "code_function",
+        ["number"] = "code_default",
+        ["identifier"] = "code_default",
+        ["punctuation"] = "code_default",
+        ["default"] = "code_default"
+    }
+    return color_map[token_type] or "code_default"
+end
+
 function love.draw()
     local colors = require("colors")
     
@@ -396,11 +453,12 @@ function love.draw()
     
     local visible_lines = editor.get_visible_line_count()
     local end_line = math.min(#current_buffer.lines, current_editor.viewport.top_line + visible_lines - 1)
-    
+
     for i = current_editor.viewport.top_line, end_line do
         local line = current_buffer.lines[i]
         local y = content_start_y + (i - current_editor.viewport.top_line) * line_height
-        love.graphics.print(line, 10, y)
+        
+        draw_line_with_syntax_highlighting(line, 10, y, current_buffer.language)
     end
     
     if current_editor.cursor_line >= current_editor.viewport.top_line and 
