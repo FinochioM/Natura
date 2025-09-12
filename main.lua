@@ -422,6 +422,7 @@ function get_color_for_token_type(token_type)
         ["number"] = "code_number",
         ["identifier"] = "code_identifier",
         ["punctuation"] = "code_punctuation",
+        ["operation"] = "code_operation",
         ["default"] = "code_default"
     }
     return color_map[token_type] or "code_default"

@@ -16,7 +16,9 @@
     + When I select a text and press tab, instead of indenting the text it creates a tab space at the end of the line. FIXED.
     + Multi line comment does not work. When I select more than one line, if I press CTRL+/ it should comment all the lines. FIXED.
     + CTRL+Z and CTRL+Y not workin properly.
+    + CTRL+V when pasting something from outside the editor does not work.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
     + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]
+    + When i am writing code and I press enter to move to the new line, the cursor should maintain the indentation from the previous line.

@@ -8,7 +8,8 @@ local TOKEN_TYPES = {
     STRING_LITERAL = "string_literal",
     COMMENT = "comment",
     NUMBER = "number",
-    PUNCTUATION = "punctuation"
+    PUNCTUATION = "punctuation",
+    OPERATION = "operation"
 }
 
 local LUA_KEYWORDS = {
@@ -18,6 +19,13 @@ local LUA_KEYWORDS = {
     ["local"] = true, ["nil"] = true, ["not"] = true, ["or"] = true,
     ["repeat"] = true, ["return"] = true, ["then"] = true, ["true"] = true,
     ["until"] = true, ["while"] = true
+}
+
+local LUA_OPERATORS = {
+    ["+"] = true, ["-"] = true, ["*"] = true, ["/"] = true, ["%"] = true,
+    ["^"] = true, ["#"] = true, ["=="] = true, ["~="] = true, ["<="] = true,
+    [">="] = true, ["<"] = true, [">"] = true, ["="] = true, [".."] = true,
+    ["..."] = true
 }
 
 local function is_alpha(char)
@@ -79,7 +87,7 @@ function lua_lang.tokenize(text)
                     i = i + 1
                     break
                 elseif c == "\\" and i < len then
-                    i = i + 2
+                    i = i + 2 -- Skip escaped char
                 else
                     i = i + 1
                 end
@@ -120,6 +128,62 @@ function lua_lang.tokenize(text)
                 length = i - start
             })
         
+        elseif char == "." and i <= len-2 and text:sub(i, i+2) == "..." then
+            table.insert(tokens, {
+                type = TOKEN_TYPES.OPERATION,
+                start = i,
+                length = 3
+            })
+            i = i + 3
+            
+        elseif char == "." and i < len and text:sub(i+1, i+1) == "." then
+            table.insert(tokens, {
+                type = TOKEN_TYPES.OPERATION,
+                start = i,
+                length = 2
+            })
+            i = i + 2
+            
+        elseif char == "=" and i < len and text:sub(i+1, i+1) == "=" then
+            table.insert(tokens, {
+                type = TOKEN_TYPES.OPERATION,
+                start = i,
+                length = 2
+            })
+            i = i + 2
+            
+        elseif char == "~" and i < len and text:sub(i+1, i+1) == "=" then
+            table.insert(tokens, {
+                type = TOKEN_TYPES.OPERATION,
+                start = i,
+                length = 2
+            })
+            i = i + 2
+            
+        elseif char == "<" and i < len and text:sub(i+1, i+1) == "=" then
+            table.insert(tokens, {
+                type = TOKEN_TYPES.OPERATION,
+                start = i,
+                length = 2
+            })
+            i = i + 2
+            
+        elseif char == ">" and i < len and text:sub(i+1, i+1) == "=" then
+            table.insert(tokens, {
+                type = TOKEN_TYPES.OPERATION,
+                start = i,
+                length = 2
+            })
+            i = i + 2
+        
+        elseif LUA_OPERATORS[char] then
+            table.insert(tokens, {
+                type = TOKEN_TYPES.OPERATION,
+                start = i,
+                length = 1
+            })
+            i = i + 1
+        
         else
             table.insert(tokens, {
                 type = TOKEN_TYPES.PUNCTUATION,
@@ -127,6 +191,17 @@ function lua_lang.tokenize(text)
                 length = 1
             })
             i = i + 1
+        end
+    end
+    
+    for i = 2, #tokens do
+        local current_token = tokens[i]
+        local previous_token = tokens[i-1]
+        
+        if current_token.type == TOKEN_TYPES.PUNCTUATION and 
+           text:sub(current_token.start, current_token.start) == "(" and
+           previous_token.type == TOKEN_TYPES.IDENTIFIER then
+            previous_token.type = TOKEN_TYPES.FUNCTION
         end
     end
     
