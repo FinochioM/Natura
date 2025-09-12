@@ -14,6 +14,9 @@ function love.load(args)
     local config = require("config")
     config.load()
 
+    local colors = require("colors")
+    colors.load()
+
     local keymap = require("keymap")
     keymap.load_keybinds()
 
@@ -309,9 +312,70 @@ local function draw_file_dialog(ed)
     end
 end
 
-function love.draw()
-    love.graphics.clear(0.1, 0.1, 0.1)
+function draw_search_highlights(ed, font, line_height, content_start_y)
+    local colors = require("colors")
     
+    if not ed.search.active or #ed.search.results == 0 then
+        return
+    end
+    
+    for i, result in ipairs(ed.search.results) do
+        if result.line >= ed.viewport.top_line and result.line <= ed.viewport.top_line + editor.get_visible_line_count() - 1 then
+            local y = content_start_y + (result.line - ed.viewport.top_line) * line_height
+            local line = current_buffer.lines[result.line]
+            local before_match = line:sub(1, result.col - 1)
+            local match_text = line:sub(result.col, result.col + result.length - 1)
+            
+            local x = 10 + font:getWidth(before_match)
+            local width = font:getWidth(match_text)
+            
+            if i == ed.search.current_result then
+                colors.set_color("search_result_active")
+            else
+                colors.set_color("search_result_inactive")
+            end
+            
+            love.graphics.rectangle("fill", x, y, width, line_height)
+        end
+    end
+end
+
+function draw_selection_highlight(ed, font, line_height, content_start_y)
+    local colors = require("colors")
+    
+    if not editor.has_selection(ed) then
+        return
+    end
+    
+    local bounds = editor.get_selection_bounds(ed)
+    
+    for line_num = bounds.start_line, bounds.end_line do
+        if line_num >= ed.viewport.top_line and line_num <= ed.viewport.top_line + editor.get_visible_line_count() - 1 then
+            local y = content_start_y + (line_num - ed.viewport.top_line) * line_height
+            local line = current_buffer.lines[line_num]
+            
+            local start_col = (line_num == bounds.start_line) and bounds.start_col or 0
+            local end_col = (line_num == bounds.end_line) and bounds.end_col or #line
+            
+            local before_selection = line:sub(1, start_col)
+            local selection_text = line:sub(start_col + 1, end_col)
+            
+            local x = 10 + font:getWidth(before_selection)
+            local width = font:getWidth(selection_text)
+            
+            colors.set_color("selection_active")
+            love.graphics.rectangle("fill", x, y, width, line_height)
+        end
+    end
+end
+
+function love.draw()
+    local colors = require("colors")
+    
+    local bg_color = colors.get("background")
+    love.graphics.clear(bg_color[1], bg_color[2], bg_color[3], bg_color[4])
+    
+    colors.set_color("text")
     local title = "Natura Editor"
     if current_buffer.filepath then
         title = title .. " - " .. current_buffer.filepath
@@ -319,7 +383,6 @@ function love.draw()
             title = title .. " *"
         end
     end
-    love.graphics.setColor(0.8, 0.8, 0.8)
     love.graphics.print(title, 10, 10)
     
     local font = love.graphics.getFont()
@@ -327,10 +390,9 @@ function love.draw()
     local content_start_y = 40
     
     draw_search_highlights(current_editor, font, line_height, content_start_y)
-    
     draw_selection_highlight(current_editor, font, line_height, content_start_y)
     
-    love.graphics.setColor(1, 1, 1)
+    colors.set_color("code_default")
     
     local visible_lines = editor.get_visible_line_count()
     local end_line = math.min(#current_buffer.lines, current_editor.viewport.top_line + visible_lines - 1)
@@ -346,6 +408,8 @@ function love.draw()
         local cursor_y = content_start_y + (current_editor.cursor_line - current_editor.viewport.top_line) * line_height
         local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
         local cursor_x = 10 + font:getWidth(cursor_text)
+        
+        colors.set_color("cursor")
         love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
     end
     
@@ -353,7 +417,7 @@ function love.draw()
     draw_goto_bar(current_editor)
     draw_file_dialog(current_editor)
     
-    love.graphics.setColor(0.6, 0.6, 0.6)
+    colors.set_color("text_dim")
     local debug_text = string.format("Line %d/%d (showing %d-%d)", 
         current_editor.cursor_line, #current_buffer.lines,
         current_editor.viewport.top_line, end_line)

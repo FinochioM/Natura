@@ -8,12 +8,41 @@ local function get_default_config()
         indent_using = "spaces",
         window_width = 800,
         window_height = 600,
+        colors = {
+            background = "1A1A1AFF",
+            background_dark = "141414FF",
+            
+            text = "FFFFFFFF",
+            text_dim = "999999FF",
+            
+            cursor = "CCCCCCFF",
+            cursor_inactive = "808080FF",
+            
+            selection_active = "4D6699CC",
+            selection_inactive = "33334D99",
+            
+            search_result_active = "CC9933CC",
+            search_result_inactive = "99661A99",
+            
+            code_default = "FFFFFFFF",
+            code_comment = "7FCC7FFF",
+            code_string_literal = "CC9966FF",
+            code_keyword = "99CCFFFF",
+            code_function = "B3E6B3FF",
+            code_type = "E6B399FF",
+            
+            ui_default = "CCCCCCFF",
+            ui_dim = "999999FF",
+            ui_error = "FF6666FF",
+            ui_warning = "FFCC4DFF",
+            ui_success = "66CC66FF"
+        },
         keybinds = {
             ["ctrl+s"] = "save",
-            ["ctrl+f"] = "search", 
+            ["ctrl+f"] = "search",
             ["ctrl+g"] = "goto_line",
             ["ctrl+c"] = "copy",
-            ["ctrl+v"] = "paste", 
+            ["ctrl+v"] = "paste",
             ["ctrl+x"] = "cut",
             ["ctrl+a"] = "select_all",
             ["ctrl+d"] = "select_word",
@@ -86,13 +115,35 @@ end
 function config.create_default_config()
     local content = [[# Natura Editor Configuration
 # This file contains all settings and keybinds for Natura Editor.
-# You can modify any setting here.
 
 # Editor Settings
 indent_using: spaces
 tab_size: 4
 window_width: 800
 window_height: 600
+
+# Color Theme - modify these hex values (RRGGBBAA format)
+colors.background: 1A1A1AFF
+colors.background_dark: 141414FF
+colors.text: FFFFFFFF
+colors.text_dim: 999999FF
+colors.cursor: CCCCCCFF
+colors.cursor_inactive: 808080FF
+colors.selection_active: 4D6699CC
+colors.selection_inactive: 33334D99
+colors.search_result_active: CC9933CC
+colors.search_result_inactive: 99661A99
+colors.code_default: FFFFFFFF
+colors.code_comment: 7FCC7FFF
+colors.code_string_literal: CC9966FF
+colors.code_keyword: 99CCFFFF
+colors.code_function: B3E6B3FF
+colors.code_type: E6B399FF
+colors.ui_default: CCCCCCFF
+colors.ui_dim: 999999FF
+colors.ui_error: FF6666FF
+colors.ui_warning: FFCC4DFF
+colors.ui_success: 66CC66FF
 
 # Keybinds - modify these to customize your shortcuts
 keybinds.ctrl+s: save
