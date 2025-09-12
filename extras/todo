@@ -18,7 +18,7 @@
     + CTRL+Z and CTRL+Y not workin properly.
     + CTRL+V when pasting something from outside the editor does not work.
     + CTRL+F crashes when I try to type something to search on the search bar. FIXED.
-    + CTRL+SHIFT+Right/Left arrows to select still selects letter by letter, instead of word by word.
+    + CTRL+SHIFT+Right/Left arrows to select still selects letter by letter, instead of word by word. FIXED.
     + The syntax highlightning stops working when I add new lines to the files. FIXED.
 
 # QOL:
