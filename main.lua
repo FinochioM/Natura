@@ -119,36 +119,6 @@ function love.update(dt)
     end
 end
 
-local function draw_search_highlights(ed, font, line_height, content_start_y)
-    if not ed.search.active or #ed.search.results == 0 then
-        return
-    end
-    
-    local visible_lines = editor.get_visible_line_count()
-    local viewport_start = ed.viewport.top_line
-    local viewport_end = viewport_start + visible_lines - 1
-    
-    for i, result in ipairs(ed.search.results) do
-        if result.line >= viewport_start and result.line <= viewport_end then
-            local y = content_start_y + (result.line - viewport_start) * line_height
-            local line = current_buffer.lines[result.line]
-            local before_text = string.sub(line, 1, result.start_col)
-            local match_text = string.sub(line, result.start_col + 1, result.end_col)
-            
-            local start_x = 10 + font:getWidth(before_text)
-            local width = font:getWidth(match_text)
-            
-            if i == ed.search.current_result then
-                love.graphics.setColor(1, 0.7, 0, 0.6)  -- Orange for current result
-            else
-                love.graphics.setColor(1, 1, 0, 0.3)    -- Yellow for other results
-            end
-            
-            love.graphics.rectangle("fill", start_x, y, width, line_height)
-        end
-    end
-end
-
 local function draw_selection_highlight(ed, font, line_height, content_start_y)
     if not editor.has_selection(ed) then
         return
@@ -326,8 +296,8 @@ function draw_search_highlights(ed, font, line_height, content_start_y)
         if result.line >= ed.viewport.top_line and result.line <= ed.viewport.top_line + editor.get_visible_line_count() - 1 then
             local y = content_start_y + (result.line - ed.viewport.top_line) * line_height
             local line = current_buffer.lines[result.line]
-            local before_match = line:sub(1, result.col - 1)
-            local match_text = line:sub(result.col, result.col + result.length - 1)
+            local before_match = line:sub(1, result.start_col)
+            local match_text = line:sub(result.start_col + 1, result.end_col)
             
             local x = 10 + font:getWidth(before_match)
             local width = font:getWidth(match_text)
