@@ -158,6 +158,8 @@ end
 
 function buffer.mark_dirty(buf)
     buf.dirty = true
+    local syntax = require("syntax")
+    syntax.invalidate_buffer(buf)
 end
 
 function buffer.insert_text(buf, cursor_line, cursor_col, text)
