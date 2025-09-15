@@ -39,6 +39,10 @@ function keymap.execute_action(action, ed, buf, shift, ctrl, alt)
             search.set_query(ed.search, ed.search.query, buf)
         end
         return true
+    elseif action == "show_actions" then
+        local actions_menu = require("actions_menu")
+        actions_menu.toggle(ed.actions_menu)
+        return true
     elseif action == "goto_line" then
         search.close(ed.search)
         local goto_module = require("goto")
@@ -261,6 +265,11 @@ function keymap.handle_navigation(key, ed, buf, shift, ctrl, alt)
     return false
 end
 
+function keymap.handle_actions_menu_key(key, ed, buf, shift, ctrl, alt)
+    local actions_menu = require("actions_menu")
+    return actions_menu.handle_key(ed.actions_menu, key, ed, buf)
+end
+
 function keymap.handle_key(key, ed, buf)
     local shift = love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
     local ctrl = love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") 
@@ -276,6 +285,10 @@ function keymap.handle_key(key, ed, buf)
     
     if ed.search.active then
         return keymap.handle_search_key(key, ed, buf, shift, ctrl, alt)
+    end
+
+    if ed.actions_menu.active then
+        return keymap.handle_actions_menu_key(key, ed, buf, shift, ctrl, alt)
     end
     
     local key_string = get_key_string(key, ctrl, shift, alt)

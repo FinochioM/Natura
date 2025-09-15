@@ -20,9 +20,14 @@
     + CTRL+F crashes when I try to type something to search on the search bar. FIXED.
     + CTRL+SHIFT+Right/Left arrows to select still selects letter by letter, instead of word by word. FIXED.
     + The syntax highlightning stops working when I add new lines to the files. FIXED.
+    + The color preview window does not adapt to window resizing.
+    + The color preview window resize corner is on the right, should be on the left.
+    + The color preview window does not have live updates.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
     + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]
     + When i am writing code and I press enter to move to the new line, the cursor should maintain the indentation from the previous line.
     + Color preview with test code when modifying the "colors" section in global file.
+    + Add color and parsing for global config file.
+    + Add mouse support.

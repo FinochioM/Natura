@@ -83,6 +83,9 @@ function love.textinput(text)
     elseif current_editor.search.active then
         current_editor.search.query = current_editor.search.query .. text
         search.set_query(current_editor.search, current_editor.search.query, current_buffer)
+    elseif current_editor.actions_menu.active then
+        local actions_menu = require("actions_menu")
+        actions_menu.handle_text(current_editor.actions_menu, text)
     else
         if editor.has_selection(current_editor) then
             local actions = require("actions")
@@ -473,6 +476,10 @@ function love.draw()
     draw_search_bar(current_editor)
     draw_goto_bar(current_editor)
     draw_file_dialog(current_editor)
+
+    local actions_menu = require("actions_menu")
+    actions_menu.draw(current_editor.actions_menu)
+    
     color_preview.draw()
     
     colors.set_color("text_dim")
