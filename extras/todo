@@ -20,9 +20,11 @@
     + CTRL+F crashes when I try to type something to search on the search bar. FIXED.
     + CTRL+SHIFT+Right/Left arrows to select still selects letter by letter, instead of word by word. FIXED.
     + The syntax highlightning stops working when I add new lines to the files. FIXED.
-    + The color preview window does not adapt to window resizing.
-    + The color preview window resize corner is on the right, should be on the left.
-    + The color preview window does not have live updates.
+    + The color preview window does not adapt to window resizing. FIXED.
+    + The color preview window resize corner is on the right, should be on the left. FIXED.
+    + The color preview window does not have live updates. FIXED.
+    + When I change the colour in the natura.config file, the new colors do not get updated until I close and re open the editor.
+    + The color preview window should have the resize corner in the top left corner, not in the bottom left corner like it is now.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.

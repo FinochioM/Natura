@@ -8,7 +8,7 @@ local preview_active = false
 local preview_buffer = nil
 local preview_editor = nil
 local selected_language = "lua"
-local available_languages = {"lua"}
+local available_languages = {"lua"} -- Can be extended later
 local selected_language_index = 1
 
 local preview_window = {
@@ -18,8 +18,12 @@ local preview_window = {
     width = 400,
     height = 500,
     resizing = false,
-    resize_edge = nil -- "right", "bottom", "corner"
+    resize_edge = nil, -- "left", "bottom", "corner"
+    offset_from_right = 10, -- Distance from right edge of screen
+    offset_from_bottom = 10 -- Distance from bottom edge of screen
 }
+
+local live_colors = {}
 
 local sample_code = {
     lua = [[-- Lua Sample Code
@@ -101,6 +105,53 @@ function color_preview.should_show_preview(ed, buf)
     return color_preview.is_in_colors_section(buf, ed.cursor_line)
 end
 
+function color_preview.parse_live_colors(buf)
+    live_colors = {}
+    
+    if not buf.filepath or not buf.filepath:match("%.config$") then
+        return
+    end
+    
+    local colors_start, colors_end = color_preview.find_colors_section_bounds(buf)
+    if not colors_start then
+        return
+    end
+    
+    for i = colors_start, colors_end do
+        local line = buf.lines[i]
+        local color_name, color_value = line:match("^%s*colors%.([%w_]+):%s*([%x]+)")
+        if color_name and color_value then
+            if #color_value == 8 then -- RRGGBBAA
+                local r = tonumber(color_value:sub(1, 2), 16) / 255
+                local g = tonumber(color_value:sub(3, 4), 16) / 255
+                local b = tonumber(color_value:sub(5, 6), 16) / 255
+                local a = tonumber(color_value:sub(7, 8), 16) / 255
+                live_colors[color_name] = {r, g, b, a}
+            elseif #color_value == 6 then -- RRGGBB
+                local r = tonumber(color_value:sub(1, 2), 16) / 255
+                local g = tonumber(color_value:sub(3, 4), 16) / 255
+                local b = tonumber(color_value:sub(5, 6), 16) / 255
+                live_colors[color_name] = {r, g, b, 1.0}
+            end
+        end
+    end
+end
+
+function color_preview.get_live_color(color_name)
+    return live_colors[color_name] or colors.get(color_name)
+end
+
+function color_preview.update_window_position()
+    local window_width = love.graphics.getWidth()
+    local window_height = love.graphics.getHeight()
+    
+    preview_window.x = window_width - preview_window.width - preview_window.offset_from_right
+    preview_window.y = window_height - preview_window.height - preview_window.offset_from_bottom
+    
+    preview_window.x = math.max(10, preview_window.x)
+    preview_window.y = math.max(50, preview_window.y)
+end
+
 function color_preview.create_preview_buffer()
     if not preview_buffer then
         preview_buffer = buffer.create()
@@ -125,6 +176,7 @@ function color_preview.show()
     preview_window.active = true
     
     color_preview.create_preview_buffer()
+    color_preview.update_window_position()
     print("Color preview activated")
 end
 
@@ -178,6 +230,11 @@ function color_preview.update(ed, buf)
     elseif not should_show and preview_active then
         color_preview.hide()
     end
+    
+    if preview_active then
+        color_preview.update_window_position()
+        color_preview.parse_live_colors(buf)
+    end
 end
 
 function color_preview.get_resize_cursor(mx, my)
@@ -186,12 +243,12 @@ function color_preview.get_resize_cursor(mx, my)
     local x, y, w, h = preview_window.x, preview_window.y, preview_window.width, preview_window.height
     local edge_size = 10
     
-    if mx >= x + w - edge_size and mx <= x + w and my >= y + h - edge_size and my <= y + h then
+    if mx >= x and mx <= x + edge_size and my >= y + h - edge_size and my <= y + h then
         return "corner"
     end
     
-    if mx >= x + w - edge_size and mx <= x + w and my >= y and my <= y + h then
-        return "right"
+    if mx >= x and mx <= x + edge_size and my >= y and my <= y + h then
+        return "left"
     end
     
     if mx >= x and mx <= x + w and my >= y + h - edge_size and my <= y + h then
@@ -215,13 +272,25 @@ function color_preview.handle_resize(mx, my)
     if not preview_window.resizing then return end
     
     local edge = preview_window.resize_edge
+    local window_width = love.graphics.getWidth()
     
-    if edge == "right" or edge == "corner" then
-        preview_window.width = math.max(200, mx - preview_window.x)
+    if edge == "left" or edge == "corner" then
+        local new_x = math.max(10, mx)
+        local new_width = (preview_window.x + preview_window.width) - new_x
+        new_width = math.max(200, new_width)
+        
+        preview_window.x = (preview_window.x + preview_window.width) - new_width
+        preview_window.width = new_width
+        
+        preview_window.offset_from_right = window_width - (preview_window.x + preview_window.width)
     end
     
     if edge == "bottom" or edge == "corner" then
-        preview_window.height = math.max(150, my - preview_window.y)
+        local window_height = love.graphics.getHeight()
+        local new_height = math.max(150, my - preview_window.y)
+        preview_window.height = new_height
+         
+        preview_window.offset_from_bottom = window_height - (preview_window.y + preview_window.height)
     end
 end
 
@@ -232,7 +301,7 @@ end
 
 local function draw_highlighted_line(line, x, y, line_num, language)
     if not language then
-        colors.set_color("code_default")
+        love.graphics.setColor(color_preview.get_live_color("code_default"))
         love.graphics.print(line, x, y)
         return
     end
@@ -240,7 +309,7 @@ local function draw_highlighted_line(line, x, y, line_num, language)
     local tokens = syntax.get_line_tokens(preview_buffer, line_num)
     
     if #tokens == 0 then
-        colors.set_color("code_default")
+        love.graphics.setColor(color_preview.get_live_color("code_default"))
         love.graphics.print(line, x, y)
         return
     end
@@ -251,7 +320,7 @@ local function draw_highlighted_line(line, x, y, line_num, language)
     for _, token in ipairs(tokens) do
         if token.start > last_end then
             local before_text = line:sub(last_end, token.start - 1)
-            colors.set_color("code_default")
+            love.graphics.setColor(color_preview.get_live_color("code_default"))
             love.graphics.print(before_text, current_x, y)
             current_x = current_x + love.graphics.getFont():getWidth(before_text)
         end
@@ -270,7 +339,7 @@ local function draw_highlighted_line(line, x, y, line_num, language)
             ["default"] = "code_default"
         }
         local color_name = color_map[token.type] or "code_default"
-        colors.set_color(color_name)
+        love.graphics.setColor(color_preview.get_live_color(color_name))
         love.graphics.print(token_text, current_x, y)
         current_x = current_x + love.graphics.getFont():getWidth(token_text)
         
@@ -279,7 +348,7 @@ local function draw_highlighted_line(line, x, y, line_num, language)
     
     if last_end <= #line then
         local remaining_text = line:sub(last_end)
-        colors.set_color("code_default")
+        love.graphics.setColor(color_preview.get_live_color("code_default"))
         love.graphics.print(remaining_text, current_x, y)
     end
 end
@@ -287,41 +356,32 @@ end
 function color_preview.draw()
     if not preview_window.active then return end
     
-    local window_width = love.graphics.getWidth()
-    local window_height = love.graphics.getHeight()
-    
-    if preview_window.x == 0 then
-        preview_window.x = window_width - preview_window.width - 10
-        preview_window.y = 50
-        preview_window.height = window_height - 100
-    end
-    
-    colors.set_color("background_dark")
+    love.graphics.setColor(color_preview.get_live_color("background_dark"))
     love.graphics.rectangle("fill", preview_window.x, preview_window.y, preview_window.width, preview_window.height)
     
-    colors.set_color("ui_dim")
+    love.graphics.setColor(color_preview.get_live_color("ui_dim"))
     love.graphics.rectangle("line", preview_window.x, preview_window.y, preview_window.width, preview_window.height)
     
-    colors.set_color("text")
+    love.graphics.setColor(color_preview.get_live_color("text"))
     love.graphics.print("Color Preview", preview_window.x + 10, preview_window.y + 10)
     
     local lang_y = preview_window.y + 30
-    colors.set_color("text_dim")
+    love.graphics.setColor(color_preview.get_live_color("text_dim"))
     love.graphics.print("Language:", preview_window.x + 10, lang_y)
     
     local btn_x = preview_window.x + 80
-    colors.set_color("ui_neutral")
+    love.graphics.setColor(color_preview.get_live_color("ui_neutral"))
     love.graphics.rectangle("fill", btn_x - 2, lang_y - 2, 20, 16)
-    colors.set_color("text")
+    love.graphics.setColor(color_preview.get_live_color("text"))
     love.graphics.print("<", btn_x, lang_y)
     
-    colors.set_color("text")
+    love.graphics.setColor(color_preview.get_live_color("text"))
     love.graphics.print(selected_language, btn_x + 25, lang_y)
     
     local next_btn_x = btn_x + 25 + love.graphics.getFont():getWidth(selected_language) + 5
-    colors.set_color("ui_neutral")
+    love.graphics.setColor(color_preview.get_live_color("ui_neutral"))
     love.graphics.rectangle("fill", next_btn_x - 2, lang_y - 2, 20, 16)
-    colors.set_color("text")
+    love.graphics.setColor(color_preview.get_live_color("text"))
     love.graphics.print(">", next_btn_x, lang_y)
     
     if preview_buffer and preview_editor then
@@ -341,18 +401,18 @@ function color_preview.draw()
     local edge_size = 10
     local x, y, w, h = preview_window.x, preview_window.y, preview_window.width, preview_window.height
     
-    colors.set_color("ui_dim")
-    love.graphics.rectangle("fill", x + w - 2, y + 20, 2, h - 40)
+    love.graphics.setColor(color_preview.get_live_color("ui_dim"))
+    love.graphics.rectangle("fill", x, y + 20, 2, h - 40)
     
     love.graphics.rectangle("fill", x + 20, y + h - 2, w - 40, 2)
     
-    love.graphics.rectangle("fill", x + w - edge_size, y + h - edge_size, edge_size, edge_size)
+    love.graphics.rectangle("fill", x, y + h - edge_size, edge_size, edge_size)
 end
 
 function color_preview.handle_mouse_pressed(mx, my, button)
     if not preview_window.active then return false end
     
-    if button == 1 then
+    if button == 1 then -- left click
         if color_preview.start_resize(mx, my) then
             return true
         end
