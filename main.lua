@@ -56,6 +56,23 @@ function love.load(args)
     print("Natura Editor starting...")
 end
 
+function love.mousepressed(x, y, button, istouch, presses)
+    local color_preview = require("color_preview")
+    if color_preview.handle_mouse_pressed(x, y, button) then
+        return
+    end
+end
+
+function love.mousemoved(x, y, dx, dy, istouch)
+    local color_preview = require("color_preview")
+    color_preview.handle_mouse_moved(x, y)
+end
+
+function love.mousereleased(x, y, button, istouch, presses)
+    local color_preview = require("color_preview")
+    color_preview.handle_mouse_released(x, y, button)
+end
+
 function love.textinput(text)
     if current_editor.file_dialog.active then
         local file_dialog = require("file_dialog")
