@@ -51,6 +51,20 @@ local default_colors = {
     ui_success = {0.13, 0.47, 0.13, 1.0}            -- 227722FF
 }
 
+local config_syntax_colors = {
+    config_comment = {0.6, 0.6, 0.6, 1.0},           -- Light gray for comments
+    config_section_header = {0.2, 0.8, 0.2, 1.0},    -- Green for section headers
+    config_color_key = {0.8, 0.4, 0.8, 1.0},         -- Purple for color keys
+    config_keybind_key = {0.4, 0.6, 1.0, 1.0},       -- Blue for keybind keys  
+    config_setting_key = {0.8, 0.8, 0.4, 1.0},       -- Yellow for setting keys
+    config_separator = {0.7, 0.7, 0.7, 1.0},         -- Light gray for colons
+    config_hex_value = {1.0, 0.6, 0.4, 1.0},         -- Orange for hex values
+    config_action_value = {0.4, 0.8, 0.6, 1.0},      -- Teal for action values
+    config_string_value = {0.6, 0.8, 0.8, 1.0},      -- Light cyan for strings
+    config_number_value = {1.0, 0.8, 0.4, 1.0},      -- Light orange for numbers
+    config_default = {0.9, 0.9, 0.9, 1.0}            -- White for default
+}
+
 local function hex_to_color(hex_string)
     if not hex_string or #hex_string < 6 then
         return nil
@@ -105,6 +119,10 @@ function colors.reload()
 end
 
 function colors.get(color_name)
+    if config_syntax_colors[color_name] then
+        return config_syntax_colors[color_name]
+    end
+    
     return current_colors[color_name] or default_colors[color_name] or {1.0, 1.0, 1.0, 1.0}
 end
 

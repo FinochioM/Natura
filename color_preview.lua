@@ -340,7 +340,17 @@ local function draw_highlighted_line(line, x, y, line_num, language)
             ["identifier"] = "code_identifier",
             ["punctuation"] = "code_punctuation",
             ["operation"] = "code_operation",
-            ["default"] = "code_default"
+            ["default"] = "code_default",
+            
+            ["section_header"] = "config_section_header",
+            ["color_key"] = "config_color_key", 
+            ["keybind_key"] = "config_keybind_key",
+            ["setting_key"] = "config_setting_key",
+            ["separator"] = "config_separator",
+            ["hex_value"] = "config_hex_value",
+            ["action_value"] = "config_action_value",
+            ["string_value"] = "config_string_value", 
+            ["number_value"] = "config_number_value"
         }
         local color_name = color_map[token.type] or "code_default"
         love.graphics.setColor(color_preview.get_live_color(color_name))

@@ -421,7 +421,17 @@ function get_color_for_token_type(token_type)
         ["identifier"] = "code_identifier",
         ["punctuation"] = "code_punctuation",
         ["operation"] = "code_operation",
-        ["default"] = "code_default"
+        ["default"] = "code_default",
+        
+        ["section_header"] = "config_section_header",
+        ["color_key"] = "config_color_key", 
+        ["keybind_key"] = "config_keybind_key",
+        ["setting_key"] = "config_setting_key",
+        ["separator"] = "config_separator",
+        ["hex_value"] = "config_hex_value",
+        ["action_value"] = "config_action_value",
+        ["string_value"] = "config_string_value", 
+        ["number_value"] = "config_number_value"
     }
     return color_map[token_type] or "code_default"
 end

@@ -2,11 +2,13 @@ local langs = {}
 
 local available_languages = {
     lua = require("langs.lua"),
+    config = require("langs.config"),
 }
 
 function langs.get_language_from_extension(extension)
     local lang_map = {
         [".lua"] = "lua",
+        [".config"] = "config",
     }
     return lang_map[extension]
 end
