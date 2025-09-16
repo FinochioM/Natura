@@ -152,6 +152,13 @@ function buffer.save_file(buf)
     
     buf.dirty = false
     buf.last_modified = buffer.get_file_mtime(buf.filepath)
+    
+    if buf.filepath:match("natura%.config$") then
+        local colors = require("colors")
+        colors.reload()
+        print("Reloaded colors from config")
+    end
+    
     print("Saved: " .. buf.filepath)
     return true
 end

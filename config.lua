@@ -289,4 +289,44 @@ function config.save()
     end
 end
 
+function config.reload()
+    local config_path = "natura.config"
+    
+    if not file_exists(config_path) then
+        return false
+    end
+    
+    local file_content = read_file(config_path)
+    if not file_content then
+        return false
+    end
+    
+    current_config = get_default_config()
+    
+    for line in file_content:gmatch("[^\r\n]+") do
+        line = line:gsub("^%s+", ""):gsub("%s+$", "") -- trim
+        
+        if line:match("^#") or line == "" then
+        elseif line:match("^colors%.") then
+            local key, value = line:match("^colors%.([%w_]+):%s*(.+)")
+            if key and value then
+                current_config.colors[key] = value
+            end
+        elseif line:match("^keybinds%.") then
+            local key, value = line:match("^keybinds%.([%w%+]+):%s*(.+)")
+            if key and value then
+                current_config.keybinds[key] = value
+            end
+        else
+            local key, value = line:match("^([%w_]+):%s*(.+)")
+            if key and value then
+                current_config[key] = value
+            end
+        end
+    end
+    
+    print("Config reloaded")
+    return true
+end
+
 return config

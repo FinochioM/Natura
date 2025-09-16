@@ -1,5 +1,7 @@
 local colors = {}
 
+local current_colors = {}
+
 local default_colors = { 
     background = {0.13, 0.13, 0.13, 1.0},           -- 222222FF
     background_dark = {0.0, 0.0, 0.0, 1.0},         -- 000000FF
@@ -49,50 +51,65 @@ local default_colors = {
     ui_success = {0.13, 0.47, 0.13, 1.0}            -- 227722FF
 }
 
-local current_colors = {}
+local function hex_to_color(hex_string)
+    if not hex_string or #hex_string < 6 then
+        return nil
+    end
+    
+    hex_string = hex_string:gsub("#", "")
+    
+    if #hex_string == 6 then
+        local r = tonumber(hex_string:sub(1, 2), 16) / 255
+        local g = tonumber(hex_string:sub(3, 4), 16) / 255
+        local b = tonumber(hex_string:sub(5, 6), 16) / 255
+        return {r, g, b, 1.0}
+    elseif #hex_string == 8 then
+        local r = tonumber(hex_string:sub(1, 2), 16) / 255
+        local g = tonumber(hex_string:sub(3, 4), 16) / 255
+        local b = tonumber(hex_string:sub(5, 6), 16) / 255
+        local a = tonumber(hex_string:sub(7, 8), 16) / 255
+        return {r, g, b, a}
+    end
+    
+    return nil
+end
 
-function colors.load()
+local function load_colors_from_config()
     local config = require("config")
+    current_colors = {}
     
     for name, color in pairs(default_colors) do
         current_colors[name] = {color[1], color[2], color[3], color[4]}
     end
     
-    local user_colors = config.get("colors") or {}
-    for name, hex in pairs(user_colors) do
-        local color = colors.hex_to_rgba(hex)
+    local config_colors = config.get("colors") or {}
+    for name, hex_value in pairs(config_colors) do
+        local color = hex_to_color(hex_value)
         if color then
             current_colors[name] = color
-            print("Loaded color: " .. name .. " = " .. hex)
         end
     end
 end
 
-function colors.get(name)
-    return current_colors[name] or default_colors[name] or {1, 1, 1, 1}
+function colors.load()
+    load_colors_from_config()
+    print("Colors loaded")
 end
 
-function colors.hex_to_rgba(hex)
-    if type(hex) ~= "string" or #hex ~= 8 then
-        print("Invalid hex color: " .. tostring(hex))
-        return nil
-    end
+function colors.reload()
+    local config = require("config")
+    config.reload()
     
-    local r = tonumber(hex:sub(1, 2), 16) / 255.0
-    local g = tonumber(hex:sub(3, 4), 16) / 255.0  
-    local b = tonumber(hex:sub(5, 6), 16) / 255.0
-    local a = tonumber(hex:sub(7, 8), 16) / 255.0
-    
-    if not r or not g or not b or not a then
-        print("Failed to parse hex color: " .. hex)
-        return nil
-    end
-    
-    return {r, g, b, a}
+    load_colors_from_config()
+    print("Colors reloaded")
 end
 
-function colors.set_color(name)
-    local color = colors.get(name)
+function colors.get(color_name)
+    return current_colors[color_name] or default_colors[color_name] or {1.0, 1.0, 1.0, 1.0}
+end
+
+function colors.set_color(color_name)
+    local color = colors.get(color_name)
     love.graphics.setColor(color[1], color[2], color[3], color[4])
 end
 

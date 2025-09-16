@@ -243,7 +243,7 @@ function color_preview.get_resize_cursor(mx, my)
     local x, y, w, h = preview_window.x, preview_window.y, preview_window.width, preview_window.height
     local edge_size = 10
     
-    if mx >= x and mx <= x + edge_size and my >= y + h - edge_size and my <= y + h then
+    if mx >= x and mx <= x + edge_size and my >= y and my <= y + edge_size then
         return "corner"
     end
     
@@ -251,8 +251,8 @@ function color_preview.get_resize_cursor(mx, my)
         return "left"
     end
     
-    if mx >= x and mx <= x + w and my >= y + h - edge_size and my <= y + h then
-        return "bottom"
+    if mx >= x and mx <= x + w and my >= y and my <= y + edge_size then
+        return "top"
     end
     
     return nil
@@ -273,6 +273,7 @@ function color_preview.handle_resize(mx, my)
     
     local edge = preview_window.resize_edge
     local window_width = love.graphics.getWidth()
+    local window_height = love.graphics.getHeight()
     
     if edge == "left" or edge == "corner" then
         local new_x = math.max(10, mx)
@@ -285,11 +286,14 @@ function color_preview.handle_resize(mx, my)
         preview_window.offset_from_right = window_width - (preview_window.x + preview_window.width)
     end
     
-    if edge == "bottom" or edge == "corner" then
-        local window_height = love.graphics.getHeight()
-        local new_height = math.max(150, my - preview_window.y)
+    if edge == "top" or edge == "corner" then
+        local new_y = math.max(50, my)
+        local new_height = (preview_window.y + preview_window.height) - new_y
+        new_height = math.max(150, new_height)
+        
+        preview_window.y = (preview_window.y + preview_window.height) - new_height
         preview_window.height = new_height
-         
+        
         preview_window.offset_from_bottom = window_height - (preview_window.y + preview_window.height)
     end
 end
@@ -400,13 +404,13 @@ function color_preview.draw()
     
     local edge_size = 10
     local x, y, w, h = preview_window.x, preview_window.y, preview_window.width, preview_window.height
-    
+
     love.graphics.setColor(color_preview.get_live_color("ui_dim"))
     love.graphics.rectangle("fill", x, y + 20, 2, h - 40)
-    
-    love.graphics.rectangle("fill", x + 20, y + h - 2, w - 40, 2)
-    
-    love.graphics.rectangle("fill", x, y + h - edge_size, edge_size, edge_size)
+
+    love.graphics.rectangle("fill", x + 20, y, w - 40, 2)
+
+    love.graphics.rectangle("fill", x, y, edge_size, edge_size)
 end
 
 function color_preview.handle_mouse_pressed(mx, my, button)
