@@ -8,6 +8,7 @@ local function get_default_config()
         indent_using = "spaces",
         window_width = 800,
         window_height = 600,
+        maximize_on_start = false,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",

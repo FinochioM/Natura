@@ -33,6 +33,10 @@ function love.load(args)
         minwidth = 400,
         minheight = 300
     })
+
+    if config.get("maximize_on_start") then
+        love.window.maximize()
+    end
     
     love.keyboard.setKeyRepeat(true)
     
