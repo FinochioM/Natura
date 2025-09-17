@@ -27,11 +27,28 @@ function love.load(args)
     love.window.setTitle("Natura Editor")
     local window_width = config.get("window_width")
     local window_height = config.get("window_height")
+
+    local display_index = 1
+    
+    if config.get("open_on_the_biggest_monitor") then
+        local display_count = love.window.getDisplayCount()
+        local biggest_area = 0
+        
+        for i = 1, display_count do
+            local width, height = love.window.getDesktopDimensions(i)
+            local area = width * height
+            if area > biggest_area then
+                biggest_area = area
+                display_index = i
+            end
+        end
+    end
     
     love.window.setMode(window_width, window_height, {
         resizable = true,
         minwidth = 400,
-        minheight = 300
+        minheight = 300,
+        display = display_index
     })
 
     if config.get("maximize_on_start") then

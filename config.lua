@@ -9,6 +9,7 @@ local function get_default_config()
         window_width = 800,
         window_height = 600,
         maximize_on_start = false,
+        open_on_the_biggest_monitor = false,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",
