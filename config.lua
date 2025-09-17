@@ -8,8 +8,11 @@ local function get_default_config()
         indent_using = "spaces",
         window_width = 800,
         window_height = 600,
+        font = "fonts/FiraCode-Retina.ttf",
+        font_size = 14,
         maximize_on_start = false,
         open_on_the_biggest_monitor = false,
+        cursor_as_block = true,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",

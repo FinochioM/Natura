@@ -18,6 +18,20 @@ function love.load(args)
     local config = require("config")
     config.load()
 
+    local font_name = config.get("font")
+    local font_size = config.get("font_size") or 14
+    
+    if font_name and font_name ~= "default" then
+        local success, font = pcall(love.graphics.newFont, font_name, font_size)
+        if success then
+            love.graphics.setFont(font)
+        else
+            print("Could not load font: " .. font_name .. ", using default")
+        end
+    else
+        love.graphics.setFont(love.graphics.newFont(font_size))
+    end
+
     local colors = require("colors")
     colors.load()
 
