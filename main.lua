@@ -509,13 +509,27 @@ function love.draw()
     end
         
     if current_editor.cursor_line >= current_editor.viewport.top_line and 
-       current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
+    current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
         local cursor_y = content_start_y + (current_editor.cursor_line - current_editor.viewport.top_line) * line_height
         local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
         local cursor_x = 10 + font:getWidth(cursor_text)
         
+        local config = require("config")
+        local cursor_as_block = config.get("cursor_as_block")
+        
         colors.set_color("cursor")
-        love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
+        if cursor_as_block then
+            local char_width = font:getWidth(" ")
+            love.graphics.rectangle("fill", cursor_x, cursor_y, char_width, line_height)
+            
+            local char_under_cursor = string.sub(current_buffer.lines[current_editor.cursor_line], current_editor.cursor_col + 1, current_editor.cursor_col + 1)
+            if char_under_cursor ~= "" then
+                colors.set_color("background")
+                love.graphics.print(char_under_cursor, cursor_x, cursor_y)
+            end
+        else
+            love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
+        end
     end
     
     draw_search_bar(current_editor)

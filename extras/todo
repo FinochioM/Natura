@@ -25,8 +25,8 @@
     + The color preview window does not have live updates. FIXED.
     + When I change the colour in the natura.config file, the new colors do not get updated until I close and re open the editor. FIXED.
     + The color preview window should have the resize corner in the top left corner, not in the bottom left corner like it is now. FIXED.
-    + If I CTRL+SHIFT+Arrow(left/right) the selection resets/stops when I reach an ASCII character.
-    + The selection logics only lasts a few seconds. Then it deselects automatically.
+    + If I CTRL+SHIFT+Arrow(left/right) the selection resets/stops when I reach an ASCII character. Only happens in global config file.
+    + The selection logics only lasts a few seconds. Then it deselects automatically.Only happens in global config file.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
