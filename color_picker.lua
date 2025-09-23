@@ -165,8 +165,11 @@ end
 
 function color_picker.handle_mouse_pressed(x, y, button)
     if not picker_state.active then return false end
+    if not x or not y or not button then return false end
     
     local rect = picker_state.rect
+    if not rect or not rect.x or not rect.y or not rect.w or not rect.h then return false end
+    
     local slider_rect = {
         x = rect.x + rect.w + 10,
         y = rect.y,

@@ -453,7 +453,7 @@ end
 function color_preview.handle_mouse_pressed(mx, my, button)
     if not preview_window.active then return false end
 
-    if picker_active and color_picker.handle_mouse_pressed(x, y, button) then
+    if picker_active and color_picker.handle_mouse_pressed(mx, my, button) then
         return true
     end
     
@@ -481,6 +481,10 @@ function color_preview.handle_mouse_pressed(mx, my, button)
 end
 
 function color_preview.handle_mouse_moved(mx, my)
+    if picker_active then
+        color_picker.handle_mouse_moved(mx, my)
+    end
+    
     if preview_window.resizing then
         color_preview.handle_resize(mx, my)
         return true
@@ -488,7 +492,6 @@ function color_preview.handle_mouse_moved(mx, my)
     
     local edge = color_preview.get_resize_cursor(mx, my)
     if edge then
-        -- love.mouse.setCursor() -- Would need to create resize cursors
         return true
     end
     
@@ -496,7 +499,7 @@ function color_preview.handle_mouse_moved(mx, my)
 end
 
 function color_preview.handle_mouse_released(mx, my, button)
-    if picker_active and color_picker.handle_mouse_released(x, y, button) then
+    if picker_active and color_picker.handle_mouse_released(mx, my, button) then
         return true
     end
     
