@@ -216,4 +216,70 @@ function file_dialog.filter_files(dialog)
     end
 end
 
+function file_dialog.draw(ed)
+    if not ed.file_dialog.active then return end
+    
+    local colors = require("colors")
+    local window_width = love.graphics.getWidth()
+    local window_height = love.graphics.getHeight()
+    local dialog_width = 500
+    local dialog_height = 400
+    local dialog_x = (window_width - dialog_width) / 2
+    local dialog_y = (window_height - dialog_height) / 2
+    
+    colors.set_color("background_dark")
+    love.graphics.rectangle("fill", dialog_x, dialog_y, dialog_width, dialog_height)
+    
+    colors.set_color("ui_dim")
+    love.graphics.rectangle("line", dialog_x, dialog_y, dialog_width, dialog_height)
+    
+    colors.set_color("text")
+    love.graphics.print("Open File", dialog_x + 10, dialog_y + 10)
+    
+    colors.set_color("text_dim")
+    local current_dir = ed.file_dialog.current_dir
+    if current_dir == "" then
+        current_dir = "Drives"
+    end
+    love.graphics.print("Directory: " .. current_dir, dialog_x + 10, dialog_y + 30)
+
+    colors.set_color("text_dim")
+    love.graphics.print("Filter: " .. ed.file_dialog.input, dialog_x + 10, dialog_y + 50)
+    
+    local font = love.graphics.getFont()
+    local line_height = font:getHeight()
+    local list_start_y = dialog_y + 70
+    local visible_items = math.floor((dialog_height - 100) / line_height)
+    
+    for i = 1, math.min(#ed.file_dialog.files, visible_items) do
+        local file = ed.file_dialog.files[i]
+        local y = list_start_y + (i - 1) * line_height
+        
+        if i == ed.file_dialog.selected_index then
+            colors.set_color("selection_active")
+            love.graphics.rectangle("fill", dialog_x + 5, y - 2, dialog_width - 10, line_height + 4)
+        end
+        
+        if file.type == "directory" or file.type == "drive" then
+            colors.set_color("ui_success")
+            love.graphics.print("[" .. file.name .. "]", dialog_x + 10, y)
+        elseif file.type == "error" then
+            colors.set_color("ui_error")
+            love.graphics.print(file.name, dialog_x + 10, y)
+        else
+            colors.set_color("text")
+            love.graphics.print(file.name, dialog_x + 10, y)
+        end
+    end
+
+    if #ed.file_dialog.files == 0 and ed.file_dialog.input ~= "" then
+        colors.set_color("text_dim")
+        love.graphics.print("No matches found", dialog_x + 10, list_start_y)
+    end
+    
+    colors.set_color("text_dim")
+    local status_text = string.format("%d files", #ed.file_dialog.files)
+    love.graphics.print(status_text, dialog_x + 10, dialog_y + dialog_height - 25)
+end
+
 return file_dialog
