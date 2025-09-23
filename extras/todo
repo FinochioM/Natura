@@ -26,13 +26,14 @@
     + When I change the colour in the natura.config file, the new colors do not get updated until I close and re open the editor. FIXED.
     + The color preview window should have the resize corner in the top left corner, not in the bottom left corner like it is now. FIXED.
     + If I CTRL+SHIFT+Arrow(left/right) the selection resets/stops when I reach an ASCII character. Only happens in global config file.
-    + The selection logics only lasts a few seconds. Then it deselects automatically.Only happens in global config file.
+    + The selection logics only lasts a few seconds. Then it deselects automatically. Only happens in global config file.
+    + The cursor_as_block only works if I change it from false to true, not from true to false.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
-    + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]
+    + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]. WIP.
+    + Color preview with test code when modifying the "colors" section in global file. Color wheel. WIP.
     + When i am writing code and I press enter to move to the new line, the cursor should maintain the indentation from the previous line.
-    + Color preview with test code when modifying the "colors" section in global file.
     + Add color and parsing for global config file.
     + Add mouse support.
     + Live updates for everything when updated. Like when updating a file.

@@ -3,7 +3,11 @@ local buffer = require("buffer")
 local editor = require("editor")
 local colors = require("colors")
 local syntax = require("syntax")
+local color_picker = require("color_picker")
 
+local picker_active = false
+local current_color_line = nil
+local current_color_name = nil
 local preview_active = false
 local preview_buffer = nil
 local preview_editor = nil
@@ -235,6 +239,29 @@ function color_preview.update(ed, buf)
         color_preview.update_window_position()
         color_preview.parse_live_colors(buf)
     end
+
+    local color_name, color_value = color_preview.find_color_at_cursor(buf, ed.cursor_line)
+    if color_name and color_value then
+        if not picker_active then
+            picker_active = true
+            current_color_line = ed.cursor_line
+            current_color_name = color_name
+            
+            local picker_x = preview_window.x - 280
+            local picker_y = preview_window.y + 50
+            color_picker.show(picker_x, picker_y, color_value)
+            
+            color_picker.on_color_change = function()
+                local hex = color_picker.get_current_hex()
+                color_preview.update_color_in_buffer(current_color_name, hex, buf, current_color_line)
+            end
+        end
+    elseif picker_active then
+        picker_active = false
+        current_color_line = nil
+        current_color_name = nil
+        color_picker.hide()
+    end
 end
 
 function color_preview.get_resize_cursor(mx, my)
@@ -425,6 +452,10 @@ end
 
 function color_preview.handle_mouse_pressed(mx, my, button)
     if not preview_window.active then return false end
+
+    if picker_active and color_picker.handle_mouse_pressed(x, y, button) then
+        return true
+    end
     
     if button == 1 then -- left click
         if color_preview.start_resize(mx, my) then
@@ -465,6 +496,10 @@ function color_preview.handle_mouse_moved(mx, my)
 end
 
 function color_preview.handle_mouse_released(mx, my, button)
+    if picker_active and color_picker.handle_mouse_released(x, y, button) then
+        return true
+    end
+    
     if button == 1 and preview_window.resizing then
         color_preview.stop_resize()
         return true
@@ -485,5 +520,39 @@ function color_preview.handle_key(key)
     
     return false
 end
+
+function color_preview.find_color_at_cursor(buf, cursor_line)
+    if not color_preview.is_in_colors_section(buf, cursor_line) then
+        return nil, nil
+    end
+    
+    local line = buf.lines[cursor_line]
+    local color_name, color_value = line:match("^%s*colors%.([%w_]+):%s*([%x]+)")
+    
+    if color_name and color_value and (#color_value == 6 or #color_value == 8) then
+        return color_name, color_value
+    end
+    
+    return nil, nil
+end
+
+function color_preview.update_color_in_buffer(color_name, hex_value, buf, line_num)
+    if not buf or not line_num then return end
+    
+    local line = buf.lines[line_num]
+    local new_line = line:gsub("(%s*colors%." .. color_name .. ":%s*)([%x]+)", "%1" .. hex_value)
+    
+    if new_line ~= line then
+        buf.lines[line_num] = new_line
+        buf.dirty = true
+        
+        local colors = require("colors")
+        colors.reload()
+        
+        color_preview.parse_live_colors(buf)
+    end
+end
+
+color_picker.draw()
 
 return color_preview
