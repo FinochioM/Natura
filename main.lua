@@ -102,13 +102,7 @@ function love.mousepressed(x, y, button, istouch, presses)
     end
     
     local mouse = require("mouse")
-    if mouse.handle_click(current_editor, current_buffer, x, y, button, presses) then
-        return
-    end
-    
-    if mouse.handle_press(current_editor, current_buffer, x, y, button) then
-        return
-    end
+    mouse.handle_press(current_editor, current_buffer, x, y, button)
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
