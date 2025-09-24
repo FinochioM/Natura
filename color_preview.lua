@@ -591,11 +591,15 @@ function color_preview.update_color_in_buffer(color_name, hex_value, buf, line_n
         buf.lines[line_num] = new_line
         buf.dirty = true
         
-        local colors = require("colors")
-        colors.reload()
-        
-        color_preview.parse_live_colors(buf)
+        color_preview.update_live_colors(buf)
     end
 end
 
+function color_preview.update_live_colors(buf)
+    local colors = require("colors")
+    
+    color_preview.parse_live_colors(buf)
+    
+    colors.update_from_live_colors(live_colors)
+end
 return color_preview

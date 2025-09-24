@@ -131,4 +131,12 @@ function colors.set_color(color_name)
     love.graphics.setColor(color[1], color[2], color[3], color[4])
 end
 
+function colors.update_from_live_colors(live_color_table)
+    for name, color in pairs(live_color_table) do
+        if current_colors[name] then
+            current_colors[name] = {color[1], color[2], color[3], color[4]}
+        end
+    end
+end
+
 return colors
