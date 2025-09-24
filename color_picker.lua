@@ -313,4 +313,11 @@ function color_picker.is_active()
     return picker_state.active
 end
 
+function color_picker.update_position(x, y)
+    if picker_state.active then
+        picker_state.rect.x = x
+        picker_state.rect.y = y
+    end
+end
+
 return color_picker

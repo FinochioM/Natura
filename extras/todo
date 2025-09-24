@@ -27,8 +27,8 @@
     + The color preview window should have the resize corner in the top left corner, not in the bottom left corner like it is now. FIXED.
     + The selection logics only lasts a few seconds. Then it deselects automatically. Only happens in global config file.
     + The cursor_as_block only works if I change it from false to true, not from true to false.
-    + The color wheel should move with the color preview window.
-    + The color wheel can only change the background colour. It cannot change the rest of the colors. It should change the color the cursor is standing on.
+    + The color wheel should move with the color preview window. FIXED.
+    + The color wheel can only change the background colour. It cannot change the rest of the colors. It should change the color the cursor is standing on. FIXED.
     + If I scroll down in the global config file, the position gets reset to the top after a few seconds.
 
 # QOL:

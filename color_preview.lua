@@ -187,7 +187,13 @@ end
 function color_preview.hide()
     preview_active = false
     preview_window.active = false
-    print("Color preview hidden")
+    
+    if picker_active then
+        picker_active = false
+        current_color_line = nil
+        current_color_name = nil
+        color_picker.hide()
+    end
 end
 
 function color_preview.toggle()
@@ -238,23 +244,44 @@ function color_preview.update(ed, buf)
     if preview_active then
         color_preview.update_window_position()
         color_preview.parse_live_colors(buf)
-    end
-
-    local color_name, color_value = color_preview.find_color_at_cursor(buf, ed.cursor_line)
-    if color_name and color_value then
-        if not picker_active then
-            picker_active = true
+        
+        local color_name, color_value = color_preview.find_color_at_cursor(buf, ed.cursor_line)
+        
+        if color_name and color_value then
+            local picker_height = 200
+            local gap = 10
+            local picker_x = preview_window.x
+            local picker_y = preview_window.y - picker_height - gap
+            
+            if picker_y < 10 then
+                picker_y = preview_window.y + preview_window.height + gap
+            end
+            
+            if not picker_active then
+                picker_active = true
+                color_picker.show(picker_x, picker_y, color_value)
+            else
+                color_picker.update_position(picker_x, picker_y)
+                
+                if current_color_line ~= ed.cursor_line or current_color_name ~= color_name then
+                    local r, g, b, a = color_picker.hex_to_color(color_value)
+                    color_picker.set_color(r, g, b, a)
+                end
+            end
+            
             current_color_line = ed.cursor_line
             current_color_name = color_name
-            
-            local picker_x = preview_window.x - 280
-            local picker_y = preview_window.y + 50
-            color_picker.show(picker_x, picker_y, color_value)
             
             color_picker.on_color_change = function()
                 local hex = color_picker.get_current_hex()
                 color_preview.update_color_in_buffer(current_color_name, hex, buf, current_color_line)
             end
+            
+        elseif picker_active then
+            picker_active = false
+            current_color_line = nil
+            current_color_name = nil
+            color_picker.hide()
         end
     elseif picker_active then
         picker_active = false
