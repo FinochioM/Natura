@@ -25,9 +25,11 @@
     + The color preview window does not have live updates. FIXED.
     + When I change the colour in the natura.config file, the new colors do not get updated until I close and re open the editor. FIXED.
     + The color preview window should have the resize corner in the top left corner, not in the bottom left corner like it is now. FIXED.
-    + If I CTRL+SHIFT+Arrow(left/right) the selection resets/stops when I reach an ASCII character. Only happens in global config file.
     + The selection logics only lasts a few seconds. Then it deselects automatically. Only happens in global config file.
     + The cursor_as_block only works if I change it from false to true, not from true to false.
+    + The color wheel should move with the color preview window.
+    + The color wheel can only change the background colour. It cannot change the rest of the colors. It should change the color the cursor is standing on.
+    + If I scroll down in the global config file, the position gets reset to the top after a few seconds.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.

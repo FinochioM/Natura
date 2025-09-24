@@ -394,7 +394,7 @@ local function draw_highlighted_line(line, x, y, line_num, language)
     end
 end
 
-function color_preview.draw()
+function color_preview.draw(ed, buf)
     if not preview_window.active then return end
     
     love.graphics.setColor(color_preview.get_live_color("background_dark"))
@@ -438,7 +438,7 @@ function color_preview.draw()
             draw_highlighted_line(line, preview_window.x + 10, y, i, preview_buffer.language)
         end
     end
-    
+
     local edge_size = 10
     local x, y, w, h = preview_window.x, preview_window.y, preview_window.width, preview_window.height
 
@@ -448,6 +448,21 @@ function color_preview.draw()
     love.graphics.rectangle("fill", x + 20, y, w - 40, 2)
 
     love.graphics.rectangle("fill", x, y, edge_size, edge_size)
+
+        if ed and buf then
+        colors.set_color("text")
+        local color_name, color_value = color_preview.find_color_at_cursor(buf, ed.cursor_line)
+        local debug_text = string.format("Line %d: %s=%s", ed.cursor_line, color_name or "none", color_value or "none")
+        love.graphics.print(debug_text, preview_window.x + 10, preview_window.y + preview_window.height - 40)
+        
+        if picker_active then
+            love.graphics.print("PICKER ACTIVE", preview_window.x + 10, preview_window.y + preview_window.height - 20)
+        else
+            love.graphics.print("PICKER INACTIVE", preview_window.x + 10, preview_window.y + preview_window.height - 20)
+        end
+    end
+
+    color_picker.draw()
 end
 
 function color_preview.handle_mouse_pressed(mx, my, button)
@@ -555,7 +570,5 @@ function color_preview.update_color_in_buffer(color_name, hex_value, buf, line_n
         color_preview.parse_live_colors(buf)
     end
 end
-
-color_picker.draw()
 
 return color_preview

@@ -480,7 +480,7 @@ function love.draw()
     local actions_menu = require("actions_menu")
     actions_menu.draw(current_editor.actions_menu)
     
-    color_preview.draw()
+    color_preview.draw(current_editor, current_buffer)
     
     colors.set_color("text_dim")
     local debug_text = string.format("Line %d/%d (showing %d-%d)", 
