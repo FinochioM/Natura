@@ -14,6 +14,10 @@ local current_editor
 local file_check_timer = 0
 local file_check_interval = 1.0
 
+local cursor_visible = true
+local cursor_blink_start_time = 0
+local CURSOR_BLINK_SPEED = 0.5
+
 function love.load(args)
     local config = require("config")
     config.load()
@@ -109,6 +113,8 @@ function love.mousereleased(x, y, button, istouch, presses)
 end
 
 function love.textinput(text)
+    cursor_blink_start_time = love.timer.getTime()
+    cursor_visible = true
     if current_editor.file_dialog.active then
         local file_dialog = require("file_dialog")
         file_dialog.handle_text(current_editor.file_dialog, text)
@@ -136,6 +142,8 @@ function love.textinput(text)
 end
 
 function love.keypressed(key)
+    cursor_blink_start_time = love.timer.getTime()
+    cursor_visible = true
     if not keymap.handle_key(key, current_editor, current_buffer) then
         print("Unhandled key: " .. key)
     end
@@ -155,7 +163,26 @@ end
 
 function love.update(dt)
     file_check_timer = file_check_timer + dt
+
+    local config = require("config")
+    local blink_time = config.get("cursor_blink_time_in_seconds") or 5
     
+    if type(blink_time) == "string" then
+        blink_time = tonumber(blink_time) or 5
+    end
+    
+    if blink_time > 0 then
+        local time_since_blink_start = love.timer.getTime() - cursor_blink_start_time
+        
+        if time_since_blink_start > blink_time then
+            cursor_visible = true
+        else
+            cursor_visible = math.floor(time_since_blink_start / CURSOR_BLINK_SPEED) % 2 == 0
+        end
+    else
+        cursor_visible = true
+    end
+
     if file_check_timer >= file_check_interval then
         file_check_timer = 0
         
@@ -450,26 +477,28 @@ function love.draw()
     end
         
     if current_editor.cursor_line >= current_editor.viewport.top_line and 
-    current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
+       current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
         local cursor_y = content_start_y + (current_editor.cursor_line - current_editor.viewport.top_line) * line_height
         local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
         local cursor_x = 10 + font:getWidth(cursor_text)
         
-        local config = require("config")
-        local cursor_as_block = config.get("cursor_as_block")
-        
-        colors.set_color("cursor")
-        if cursor_as_block then
-            local char_width = font:getWidth(" ")
-            love.graphics.rectangle("fill", cursor_x, cursor_y, char_width, line_height)
+        if cursor_visible then
+            local config = require("config")
+            local cursor_as_block = config.get("cursor_as_block")
             
-            local char_under_cursor = string.sub(current_buffer.lines[current_editor.cursor_line], current_editor.cursor_col + 1, current_editor.cursor_col + 1)
-            if char_under_cursor ~= "" then
-                colors.set_color("background")
-                love.graphics.print(char_under_cursor, cursor_x, cursor_y)
+            colors.set_color("cursor")
+            if cursor_as_block then
+                local char_width = font:getWidth(" ")
+                love.graphics.rectangle("fill", cursor_x, cursor_y, char_width, line_height)
+                
+                local char_under_cursor = string.sub(current_buffer.lines[current_editor.cursor_line], current_editor.cursor_col + 1, current_editor.cursor_col + 1)
+                if char_under_cursor ~= "" then
+                    colors.set_color("background")
+                    love.graphics.print(char_under_cursor, cursor_x, cursor_y)
+                end
+            else
+                love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
             end
-        else
-            love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
         end
     end
     

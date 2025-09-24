@@ -13,6 +13,7 @@ local function get_default_config()
         maximize_on_start = false,
         open_on_the_biggest_monitor = false,
         cursor_as_block = true,
+        cursor_blink_time_in_seconds = 5,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",
