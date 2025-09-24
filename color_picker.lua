@@ -111,9 +111,7 @@ function color_picker.update_from_point(x, y, finalize)
         picker_state.rgba = {r, g, b, picker_state.rgba[4]}
     end
     
-    if finalize then
-        color_picker.on_color_change()
-    end
+    color_picker.on_color_change()
 end
 
 function color_picker.update_from_slider(x, y, finalize)
@@ -137,9 +135,7 @@ function color_picker.update_from_slider(x, y, finalize)
         picker_state.rgba = {r, g, b, picker_state.rgba[4]}
     end
     
-    if finalize then
-        color_picker.on_color_change()
-    end
+    color_picker.on_color_change()
 end
 
 function color_picker.on_color_change()
