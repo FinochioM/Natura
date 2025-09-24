@@ -159,7 +159,9 @@ function love.update(dt)
     if file_check_timer >= file_check_interval then
         file_check_timer = 0
         
-        if buffer.check_external_modification(current_buffer) then
+        local is_config_file = current_buffer.filepath and current_buffer.filepath:match("natura%.config$")
+        
+        if not is_config_file and buffer.check_external_modification(current_buffer) then
             print("File modified externally, reloading: " .. current_buffer.filepath)
             buffer.reload_from_disk(current_buffer)
             
