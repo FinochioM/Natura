@@ -100,16 +100,31 @@ function love.mousepressed(x, y, button, istouch, presses)
     if color_preview.handle_mouse_pressed(x, y, button) then
         return
     end
+    
+    local mouse = require("mouse")
+    if mouse.handle_click(current_editor, current_buffer, x, y, button, presses) then
+        return
+    end
+    
+    if mouse.handle_press(current_editor, current_buffer, x, y, button) then
+        return
+    end
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
     local color_preview = require("color_preview")
     color_preview.handle_mouse_moved(x, y)
+    
+    local mouse = require("mouse")
+    mouse.handle_drag(current_editor, current_buffer, x, y, dx, dy)
 end
 
 function love.mousereleased(x, y, button, istouch, presses)
     local color_preview = require("color_preview")
     color_preview.handle_mouse_released(x, y, button)
+    
+    local mouse = require("mouse")
+    mouse.handle_release(current_editor, current_buffer, x, y, button)
 end
 
 function love.textinput(text)

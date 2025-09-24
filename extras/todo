@@ -34,10 +34,10 @@
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
+    + Color preview with test code when modifying the "colors" section in global file. Color wheel. DONE.
+    + Add mouse support. WIP.
     + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]. WIP.
-    + Color preview with test code when modifying the "colors" section in global file. Color wheel. WIP.
     + When i am writing code and I press enter to move to the new line, the cursor should maintain the indentation from the previous line.
     + Add color and parsing for global config file.
-    + Add mouse support.
     + Live updates for everything when updated. Like when updating a file.
     + More UI feedback for the user.
