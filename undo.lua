@@ -40,7 +40,10 @@ function undo.finish_edit_group(undo_state, editor)
     end
     
     undo_state.current_group = nil
-    print("Undo group added to stack. Stack size:", #undo_state.undo_stack)
+end
+
+function undo.new_edit_group(undo_state, editor)
+    undo.finish_edit_group(undo_state, editor)
 end
 
 function undo.record_insertion(undo_state, line, col, text, editor)
@@ -73,25 +76,40 @@ function undo.record_deletion(undo_state, line, col, text, editor)
     undo_state.last_action_time = love.timer.getTime()
 end
 
+local function insert_text_raw(buffer_obj, line, col, text)
+    if line < 1 or line > #buffer_obj.lines then return end
+    local line_content = buffer_obj.lines[line]
+    local before = string.sub(line_content, 1, col)
+    local after = string.sub(line_content, col + 1)
+    buffer_obj.lines[line] = before .. text .. after
+    require("buffer").mark_dirty(buffer_obj)
+end
+
+local function delete_text_raw(buffer_obj, line, col, length)
+    if line < 1 or line > #buffer_obj.lines then return end
+    local line_content = buffer_obj.lines[line]
+    if col < 0 or col >= #line_content then return end
+    
+    local end_col = math.min(col + length, #line_content)
+    buffer_obj.lines[line] = string.sub(line_content, 1, col) .. string.sub(line_content, end_col + 1)
+    require("buffer").mark_dirty(buffer_obj)
+end
+
 function undo.perform_undo(undo_state, editor, buffer_obj)
-    undo.finish_edit_group(undo_state, editor)
+    undo.new_edit_group(undo_state, editor)
 
     if #undo_state.undo_stack == 0 then
-        print("Nothing to undo")
         return false
     end
     
     local edit_group = table.remove(undo_state.undo_stack)
-    print("Undoing group with", #edit_group.edits, "edits")
-    
-    local buffer_module = require("buffer")
     
     for i = #edit_group.edits, 1, -1 do
         local edit = edit_group.edits[i]
         if edit.type == "insert" then
-            buffer_module.delete_text(buffer_obj, edit.line, edit.col, #edit.text)
+            delete_text_raw(buffer_obj, edit.line, edit.col, #edit.text)
         elseif edit.type == "delete" then
-            buffer_module.insert_text(buffer_obj, edit.line, edit.col, edit.text)
+            insert_text_raw(buffer_obj, edit.line, edit.col, edit.text)
         end
     end
     
@@ -111,21 +129,17 @@ end
 
 function undo.perform_redo(undo_state, editor, buffer_obj)
     if #undo_state.redo_stack == 0 then
-        print("Nothing to redo")
         return false
     end
     
     local edit_group = table.remove(undo_state.redo_stack)
-    print("Redoing group with", #edit_group.edits, "edits")
-    
-    local buffer_module = require("buffer")
     
     for i = 1, #edit_group.edits do
         local edit = edit_group.edits[i]
         if edit.type == "insert" then
-            buffer_module.insert_text(buffer_obj, edit.line, edit.col, edit.text)
+            insert_text_raw(buffer_obj, edit.line, edit.col, edit.text)
         elseif edit.type == "delete" then
-            buffer_module.delete_text(buffer_obj, edit.line, edit.col, #edit.text)
+            delete_text_raw(buffer_obj, edit.line, edit.col, #edit.text)
         end
     end
     
