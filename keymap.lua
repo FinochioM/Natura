@@ -201,9 +201,17 @@ end
 
 function keymap.handle_navigation(key, ed, buf, shift, ctrl, alt)
     if key == "return" then
+        local undo = require("undo")
+        
         if require("editor").has_selection(ed) then
+            local selected_text = require("editor").get_selected_text(ed, buf)
+            local bounds = require("editor").get_selection_bounds(ed)
+            undo.record_deletion(ed.undo_state, bounds.start_line, bounds.start_col, selected_text, ed)
             actions.delete_selection(ed, buf)
         end
+        
+        undo.record_insertion(ed.undo_state, ed.cursor_line, ed.cursor_col, "\n", ed)
+        
         require("buffer").split_line(buf, ed.cursor_line, ed.cursor_col)
         ed.cursor_line = ed.cursor_line + 1
         ed.cursor_col = 0
@@ -211,13 +219,24 @@ function keymap.handle_navigation(key, ed, buf, shift, ctrl, alt)
         return true
         
     elseif key == "backspace" then
+        local undo = require("undo")
+        
         if require("editor").has_selection(ed) then
+            local selected_text = require("editor").get_selected_text(ed, buf)
+            local bounds = require("editor").get_selection_bounds(ed)
+            undo.record_deletion(ed.undo_state, bounds.start_line, bounds.start_col, selected_text, ed)
             actions.delete_selection(ed, buf)
         else
             if ed.cursor_col > 0 then
+                local line = buf.lines[ed.cursor_line]
+                local deleted_char = string.sub(line, ed.cursor_col, ed.cursor_col)
+                undo.record_deletion(ed.undo_state, ed.cursor_line, ed.cursor_col - 1, deleted_char, ed)
+                
                 require("buffer").delete_char(buf, ed.cursor_line, ed.cursor_col)
                 ed.cursor_col = ed.cursor_col - 1
             elseif ed.cursor_line > 1 then
+                undo.record_deletion(ed.undo_state, ed.cursor_line - 1, #buf.lines[ed.cursor_line - 1], "\n", ed)
+                
                 ed.cursor_col = require("buffer").join_lines(buf, ed.cursor_line)
                 ed.cursor_line = ed.cursor_line - 1
             end
@@ -226,13 +245,23 @@ function keymap.handle_navigation(key, ed, buf, shift, ctrl, alt)
         return true
 
     elseif key == "delete" then
+        local undo = require("undo")
+        
         if require("editor").has_selection(ed) then
+            local selected_text = require("editor").get_selected_text(ed, buf)
+            local bounds = require("editor").get_selection_bounds(ed)
+            undo.record_deletion(ed.undo_state, bounds.start_line, bounds.start_col, selected_text, ed)
             actions.delete_selection(ed, buf)
         else
             local line = buf.lines[ed.cursor_line]
             if ed.cursor_col < #line then
+                local deleted_char = string.sub(line, ed.cursor_col + 1, ed.cursor_col + 1)
+                undo.record_deletion(ed.undo_state, ed.cursor_line, ed.cursor_col, deleted_char, ed)
+                
                 require("buffer").delete_char(buf, ed.cursor_line, ed.cursor_col + 1)
             elseif ed.cursor_line < #buf.lines then
+                undo.record_deletion(ed.undo_state, ed.cursor_line, ed.cursor_col, "\n", ed)
+                
                 local next_line = buf.lines[ed.cursor_line + 1]
                 buf.lines[ed.cursor_line] = buf.lines[ed.cursor_line] .. next_line
                 table.remove(buf.lines, ed.cursor_line + 1)

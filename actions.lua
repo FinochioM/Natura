@@ -62,6 +62,7 @@ function actions.paste(ed, buf)
     end
 end
 
+
 function actions.cut(ed, buf)
     actions.copy(ed, buf)
     if editor.has_selection(ed) then
@@ -90,16 +91,7 @@ function actions.delete_selection(ed, buf)
     local deleted_text = editor.get_selected_text(ed, buf)
     
     local undo = require("undo")
-    if not undo.should_group_with_previous(ed.undo_state, ed) then
-        undo.record_deletion(ed.undo_state, bounds.start_line, bounds.start_col, deleted_text, ed)
-    else
-        table.insert(ed.undo_state.current_group.edits, {
-            type = "delete",
-            line = bounds.start_line,
-            col = bounds.start_col,
-            text = deleted_text
-        })
-    end
+    undo.record_deletion(ed.undo_state, bounds.start_line, bounds.start_col, deleted_text, ed)
 
     if bounds.start_line == bounds.end_line then
         local line = buf.lines[bounds.start_line]

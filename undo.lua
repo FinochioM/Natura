@@ -11,17 +11,12 @@ function undo.create()
 end
 
 function undo.start_edit_group(undo_state, editor)
-    if undo_state.current_group then
-        undo.finish_edit_group(undo_state, editor)
-    end
-    
     undo_state.current_group = {
         edits = {},
         cursor_before = {
             line = editor.cursor_line,
             col = editor.cursor_col
-        },
-        cursor_after = nil
+        }
     }
     undo_state.last_action_time = love.timer.getTime()
 end
@@ -45,18 +40,11 @@ function undo.finish_edit_group(undo_state, editor)
     end
     
     undo_state.current_group = nil
-end
-
-function undo.should_group_with_previous(undo_state, editor)
-    local current_time = love.timer.getTime()
-    local time_diff = current_time - undo_state.last_action_time
-    undo_state.last_action_time = current_time
-    
-    return time_diff < undo_state.group_timeout and undo_state.current_group ~= nil
+    print("Undo group added to stack. Stack size:", #undo_state.undo_stack)
 end
 
 function undo.record_insertion(undo_state, line, col, text, editor)
-    if not undo.should_group_with_previous(undo_state, editor) then
+    if not undo_state.current_group then
         undo.start_edit_group(undo_state, editor)
     end
     
@@ -66,10 +54,12 @@ function undo.record_insertion(undo_state, line, col, text, editor)
         col = col,
         text = text
     })
+    
+    undo_state.last_action_time = love.timer.getTime()
 end
 
 function undo.record_deletion(undo_state, line, col, text, editor)
-    if not undo.should_group_with_previous(undo_state, editor) then
+    if not undo_state.current_group then
         undo.start_edit_group(undo_state, editor)
     end
     
@@ -79,16 +69,21 @@ function undo.record_deletion(undo_state, line, col, text, editor)
         col = col,
         text = text
     })
+    
+    undo_state.last_action_time = love.timer.getTime()
 end
 
 function undo.perform_undo(undo_state, editor, buffer_obj)
     undo.finish_edit_group(undo_state, editor)
 
     if #undo_state.undo_stack == 0 then
+        print("Nothing to undo")
         return false
     end
     
     local edit_group = table.remove(undo_state.undo_stack)
+    print("Undoing group with", #edit_group.edits, "edits")
+    
     local buffer_module = require("buffer")
     
     for i = #edit_group.edits, 1, -1 do
@@ -116,10 +111,13 @@ end
 
 function undo.perform_redo(undo_state, editor, buffer_obj)
     if #undo_state.redo_stack == 0 then
+        print("Nothing to redo")
         return false
     end
     
     local edit_group = table.remove(undo_state.redo_stack)
+    print("Redoing group with", #edit_group.edits, "edits")
+    
     local buffer_module = require("buffer")
     
     for i = 1, #edit_group.edits do
