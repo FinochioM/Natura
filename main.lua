@@ -137,12 +137,16 @@ function love.textinput(text)
         local actions_menu = require("actions_menu")
         actions_menu.handle_text(current_editor.actions_menu, text)
     else
+        local undo = require("undo")
+        local actions = require("actions")
+        
         if editor.has_selection(current_editor) then
-            local actions = require("actions")
+            local selected_text = editor.get_selected_text(current_editor, current_buffer)
+            local bounds = editor.get_selection_bounds(current_editor)
+            undo.record_deletion(current_editor.undo_state, bounds.start_line, bounds.start_col, selected_text, current_editor)
             actions.delete_selection(current_editor, current_buffer)
         end
         
-        local undo = require("undo")
         undo.record_insertion(current_editor.undo_state, current_editor.cursor_line, current_editor.cursor_col, text, current_editor)
         
         current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)

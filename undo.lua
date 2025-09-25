@@ -5,7 +5,8 @@ function undo.create()
         undo_stack = {},
         redo_stack = {},
         current_group = nil,
-        last_action_time = 0
+        last_action_time = 0,
+        group_timeout = 1.0
     }
 end
 
@@ -39,23 +40,23 @@ function undo.finish_edit_group(undo_state, editor)
     table.insert(undo_state.undo_stack, undo_state.current_group)
     undo_state.redo_stack = {}
     
-    if #undo_state.undo_stack > 100 then
+    while #undo_state.undo_stack > 100 do
         table.remove(undo_state.undo_stack, 1)
     end
     
     undo_state.current_group = nil
 end
 
-function undo.should_group_with_previous(undo_state)
+function undo.should_group_with_previous(undo_state, editor)
     local current_time = love.timer.getTime()
     local time_diff = current_time - undo_state.last_action_time
     undo_state.last_action_time = current_time
     
-    return time_diff < 1.0 and undo_state.current_group ~= nil
+    return time_diff < undo_state.group_timeout and undo_state.current_group ~= nil
 end
 
 function undo.record_insertion(undo_state, line, col, text, editor)
-    if not undo.should_group_with_previous(undo_state) then
+    if not undo.should_group_with_previous(undo_state, editor) then
         undo.start_edit_group(undo_state, editor)
     end
     
@@ -68,7 +69,7 @@ function undo.record_insertion(undo_state, line, col, text, editor)
 end
 
 function undo.record_deletion(undo_state, line, col, text, editor)
-    if not undo.should_group_with_previous(undo_state) then
+    if not undo.should_group_with_previous(undo_state, editor) then
         undo.start_edit_group(undo_state, editor)
     end
     
@@ -99,12 +100,17 @@ function undo.perform_undo(undo_state, editor, buffer_obj)
         end
     end
     
-    editor.cursor_line = edit_group.cursor_before.line
-    editor.cursor_col = edit_group.cursor_before.col
+    if edit_group.cursor_before then
+        editor.cursor_line = edit_group.cursor_before.line
+        editor.cursor_col = edit_group.cursor_before.col
+    end
     
     table.insert(undo_state.redo_stack, edit_group)
     
-    require("editor").update_viewport(editor, buffer_obj)
+    local editor_module = require("editor")
+    editor_module.update_viewport(editor, buffer_obj)
+    editor_module.clear_selection(editor)
+    
     return true
 end
 
@@ -132,7 +138,10 @@ function undo.perform_redo(undo_state, editor, buffer_obj)
     
     table.insert(undo_state.undo_stack, edit_group)
     
-    require("editor").update_viewport(editor, buffer_obj)
+    local editor_module = require("editor")
+    editor_module.update_viewport(editor, buffer_obj)
+    editor_module.clear_selection(editor)
+    
     return true
 end
 

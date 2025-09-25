@@ -87,6 +87,20 @@ function actions.delete_selection(ed, buf)
     local bounds = editor.get_selection_bounds(ed)
     if not bounds then return end
 
+    local deleted_text = editor.get_selected_text(ed, buf)
+    
+    local undo = require("undo")
+    if not undo.should_group_with_previous(ed.undo_state, ed) then
+        undo.record_deletion(ed.undo_state, bounds.start_line, bounds.start_col, deleted_text, ed)
+    else
+        table.insert(ed.undo_state.current_group.edits, {
+            type = "delete",
+            line = bounds.start_line,
+            col = bounds.start_col,
+            text = deleted_text
+        })
+    end
+
     if bounds.start_line == bounds.end_line then
         local line = buf.lines[bounds.start_line]
         local before = string.sub(line, 1, bounds.start_col)
@@ -109,6 +123,7 @@ function actions.delete_selection(ed, buf)
     ed.cursor_col = bounds.start_col
     editor.clear_selection(ed)
     buffer.mark_dirty(buf)
+    editor.update_viewport(ed, buf)
 end
 
 function actions.select_all(ed, buf)
