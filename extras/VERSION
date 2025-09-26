@@ -1,8 +1,0 @@
-[[version]]
-0.2.0
-
-[[date]]
-26/09/2025
-
-[[data]]
-- Added "line_height_scale_percent" to global config.
