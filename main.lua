@@ -897,6 +897,17 @@ function love.draw()
     draw_search_bar(current_editor)
     draw_goto_bar(current_editor)
 
+    if not welcome.is_showing() then
+        local scrollbar = require("scrollbar")
+        local content_area = {
+            x = 0,
+            y = content_start_y,
+            w = love.graphics.getWidth(),
+            h = love.graphics.getHeight() - content_start_y
+        }
+        scrollbar.draw(current_editor, current_buffer, content_area)
+    end
+
     local file_dialog = require("file_dialog")
     file_dialog.draw(current_editor)
 

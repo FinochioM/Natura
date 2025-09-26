@@ -20,6 +20,11 @@ local function get_default_config()
         show_paste_effect = true,
         smooth_scrolling = true,
         scroll_beyond_last_line = true,
+        scrollbar_width_scale = 1.0,
+        scrollbar_min_opacity = 0.0,
+        scrollbar_max_opacity = 1.0,
+        scrollbar_fade_in_sensitivity = 10.0,
+        scrollbar_fade_out_delay_seconds = 2.0,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",
