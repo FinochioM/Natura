@@ -113,7 +113,8 @@ local function get_default_config()
             ["home"] = "line_start",
             ["end"] = "line_end",
             ["shift+delete"] = "delete_line",
-            ["escape"] = "clear_selection"
+            ["escape"] = "clear_selection",
+            ["alt+x"] = "show_actions",
         }
     }
 end

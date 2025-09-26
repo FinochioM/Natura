@@ -73,19 +73,19 @@
     color_preview_popup:                                -
     search_is_case_sensitive_when_uppercase_present:    -
     detect_indentation:                                 -
-    indent_using:                                       -
-    tab_size:                                           -
+    indent_using:                                       DONE
+    tab_size:                                           DONE
     status_bar_position:                                -
     status_bar_show_cursors_off_screen:                 -
     status_bar_show_line_col:                           -
     status_bar_show_indentation:                        -
     status_bar_show_selected_text_length:               -
-    show_scrollbar_marks:                               -
-    scrollbar_width_scale:                              -
-    scrollbar_min_opacity:                              -
-    scrollbar_max_opacity:                              -
-    scrollbar_fade_in_sensitivity:                      -
-    scrollbar_fade_out_delay_seconds:                   -
+    show_scrollbar_marks:                               DONE
+    scrollbar_width_scale:                              DONE
+    scrollbar_min_opacity:                              DONE
+    scrollbar_max_opacity:                              DONE
+    scrollbar_fade_in_sensitivity:                      DONE
+    scrollbar_fade_out_delay_seconds:                   DONE
 
 
 # QOL:

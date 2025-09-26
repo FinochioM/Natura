@@ -1,5 +1,6 @@
 local welcome = {}
 local colors = require("colors")
+local version = require("version")
 
 local WELCOME_CONTENT = {
     title = "Natura Editor",
@@ -39,8 +40,10 @@ function welcome.draw()
     
     love.graphics.setFont(font)
     colors.set_color("text_dim")
-    local version_width = font:getWidth(WELCOME_CONTENT.version)
-    love.graphics.print(WELCOME_CONTENT.version, center_x - version_width / 2, start_y + 45)
+    
+    local current_version = version.get_version()
+    local version_width = font:getWidth(current_version)
+    love.graphics.print(current_version, center_x - version_width / 2, start_y + 45)
     
     local subtitle_width = font:getWidth(WELCOME_CONTENT.subtitle)
     love.graphics.print(WELCOME_CONTENT.subtitle, center_x - subtitle_width / 2, start_y + 70)

@@ -26,6 +26,9 @@ function love.load(args)
     local config = require("config")
     config.load()
 
+    local version = require("version")
+    version.load()
+
     local font_name = config.get("font")
     local font_size = config.get("font_size") or 14
     
