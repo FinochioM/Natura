@@ -7,11 +7,11 @@ The idea behind this editor is to offer just enough to let you do the work, with
 In this editor you use commands to perform actions.
 
 - **ALT+X**: Open the actions menu.
-<br>
+
 ![action_menu](./extras/assets/action_menu.gif)
 
 - **CTRL+O**: Open File
-<br>
+
 ![open_file](./extras/assets/open_file.gif)
 
 - **CTRL+S**: Save  
