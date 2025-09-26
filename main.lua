@@ -7,6 +7,7 @@ local langs = require("langs.init")
 local colors = require("colors") 
 local syntax = require("syntax")
 local color_preview = require("color_preview")
+local welcome = require("welcome")
 
 local current_buffer
 local current_editor
@@ -83,6 +84,8 @@ function love.load(args)
     
     current_buffer = buffer.create()
     current_editor = editor.create()
+
+    _G.current_buffer = current_buffer
     
     if args and args[1] then
         local filepath = args[1]
@@ -577,6 +580,11 @@ function love.draw()
     local bg_color = colors.get("background")
     love.graphics.clear(bg_color[1], bg_color[2], bg_color[3], bg_color[4])
     
+    if welcome.is_showing() then
+        welcome.draw()
+        return
+    end
+
     colors.set_color("text")
     local title = "Natura Editor"
     if current_buffer.filepath then
