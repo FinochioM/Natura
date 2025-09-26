@@ -43,6 +43,12 @@ function love.load(args)
     keymap.load_keybinds()
 
     love.window.setTitle("Natura Editor")
+
+    local icon_success, icon_data = pcall(love.image.newImageData, "extras/assets/logo.png")
+    if icon_success then
+        love.window.setIcon(icon_data)
+    end
+
     local window_width = config.get("window_width")
     local window_height = config.get("window_height")
 
@@ -355,6 +361,30 @@ function draw_selection_occurrences(ed, buf, font, line_height, content_start_y)
     end
 end
 
+function draw_line_highlight(ed, buf, font, line_height, content_start_y)
+    local config = require("config")
+    if not config.get("highlight_line_with_cursor") then
+        return
+    end
+    
+    if editor.has_selection(ed) then
+        return
+    end
+    
+    local visible_lines = editor.get_visible_line_count()
+    if ed.cursor_line < ed.viewport.top_line or ed.cursor_line > ed.viewport.top_line + visible_lines - 1 then
+        return
+    end
+    
+    local colors = require("colors")
+    colors.set_color("line_highlight")
+    
+    local cursor_y = content_start_y + (ed.cursor_line - ed.viewport.top_line) * line_height
+    local line_width = love.graphics.getWidth() - 10  -- Full width minus left margin
+    
+    love.graphics.rectangle("fill", 10, cursor_y, line_width, line_height)
+end
+
 local function draw_search_bar(ed)
     if not ed.search.active then return end
     
@@ -568,6 +598,7 @@ function love.draw()
     draw_search_highlights(current_editor, font, line_height, content_start_y)
     draw_selection_highlight(current_editor, font, line_height, content_start_y)
     draw_selection_occurrences(current_editor, current_buffer, font, line_height, content_start_y)
+    draw_line_highlight(current_editor, current_buffer, font, line_height, content_start_y)
     
     colors.set_color("code_default")
     
