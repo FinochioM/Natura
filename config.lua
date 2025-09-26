@@ -289,12 +289,6 @@ function config.save()
             content = content .. key .. ": " .. tostring(value) .. "\n"
         end
     end
-    
-    if write_file("natura.config", content) then
-        print("Config saved to natura.config")
-    else
-        print("Failed to save config file")
-    end
 end
 
 function config.reload()
@@ -328,12 +322,21 @@ function config.reload()
         else
             local key, value = line:match("^([%w_]+):%s*(.+)")
             if key and value then
-                current_config[key] = value
+                local final_value
+                if value == "true" then
+                    final_value = true
+                elseif value == "false" then
+                    final_value = false
+                elseif tonumber(value) then
+                    final_value = tonumber(value)
+                else
+                    final_value = value
+                end
+                current_config[key] = final_value
             end
         end
     end
     
-    print("Config reloaded")
     return true
 end
 

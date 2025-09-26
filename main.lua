@@ -95,6 +95,17 @@ function love.load(args)
     print("Natura Editor starting...")
 end
 
+function love.filedropped(file)
+    local filename = file:getFilename()
+    if filename:match("%.config$") then
+        local config = require("config")
+        config.reload()
+        
+        local colors = require("colors")
+        colors.reload()
+    end
+end
+
 function love.mousepressed(x, y, button, istouch, presses)
     local color_preview = require("color_preview")
     if color_preview.handle_mouse_pressed(x, y, button) then
