@@ -201,6 +201,8 @@ end
 function love.update(dt)
     file_check_timer = file_check_timer + dt
 
+    editor.update_smooth_scroll(current_editor, dt)
+
     update_paste_animations(dt)
 
     local config = require("config")

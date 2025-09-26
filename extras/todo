@@ -32,6 +32,62 @@
     + indent_using and tab_size do not seem to be working correctly. FIXED.
     + The cursor_as_block only works if I change it from false to true, not from true to false. FIXED.
 
+# Settings to add:
+    maximize_on_start:                                  DONE
+    open_on_the_biggest_monitor:                        DONE
+    cursor_as_block:                                    DONE
+    cursor_blink_time_in_seconds:                       DONE
+    highlight_selection_occurrences:                    DONE
+    highlight_line_with_cursor:                         DONE
+    highlight_matching_brackets:                        DONE
+    show_paste_effect:                                  DONE
+    disable_file_open_close_animations:                 -
+    double_shift_to_search_in_workspace:                -
+    strip_trailing_whitespace_on_save:                  -
+    smooth_scrolling:                                   -
+    scroll_beyond_last_line:                            -
+    line_height_scale_percent:                          -
+    max_editor_width:                                   -
+    can_cancel_go_to_line:                              -
+    copy_whole_line_without_selection:                  -
+    editor_history_size:                                -
+    line_wrap_is_on_by_default:                         -
+    show_line_numbers:                                  -
+    show_ruler_at_column:                               -
+    colored_titlebar:                                   -
+    dark_titlebar:                                      -
+    hide_mouse_when_typing:                             -
+    draw_indent_guides:                                 -
+    auto_surround_with_brackets_and_quotes:             -
+    auto_close_brackets:                                -
+    prefer_system_file_dialogs:                         -
+    persist_local_search_results:                       -
+    load_most_recent_project_on_start:                  -
+    projects_sorting_order:                             -
+    build_panel_stays_in_one_place:                     -
+    build_panel_line_wrap_always_on:                    -
+    build_panel_width_percent:                          -
+    build_panel_height_percent:                         -
+    save_all_file_backed_buffers_on_build:              -
+    save_current_buffer_on_build:                       -
+    color_preview_popup:                                -
+    search_is_case_sensitive_when_uppercase_present:    -
+    detect_indentation:                                 -
+    indent_using:                                       -
+    tab_size:                                           -
+    status_bar_position:                                -
+    status_bar_show_cursors_off_screen:                 -
+    status_bar_show_line_col:                           -
+    status_bar_show_indentation:                        -
+    status_bar_show_selected_text_length:               -
+    show_scrollbar_marks:                               -
+    scrollbar_width_scale:                              -
+    scrollbar_min_opacity:                              -
+    scrollbar_max_opacity:                              -
+    scrollbar_fade_in_sensitivity:                      -
+    scrollbar_fade_out_delay_seconds:                   -
+
+
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
     + Color preview with test code when modifying the "colors" section in global file. Color wheel. DONE.

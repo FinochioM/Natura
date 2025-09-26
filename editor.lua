@@ -13,7 +13,10 @@ function editor.create()
         },
         viewport = {
             top_line = 1,
-            left_col = 0
+            left_col = 0,
+            target_top_line = 1,
+            scroll_animation_time = 0,
+            scroll_animation_duration = 0.2
         },
         search = require("search").create(),
         goto_state = require("goto").create(),
@@ -131,30 +134,81 @@ end
 
 function editor.update_viewport(ed, buf)
     local visible_lines = editor.get_visible_line_count()
+    local current_target = ed.viewport.target_top_line
     
-    if ed.cursor_line >= ed.viewport.top_line + visible_lines then
-        ed.viewport.top_line = ed.cursor_line - visible_lines + 1
+    local target_top_line = current_target
+    
+    if ed.cursor_line < current_target then
+        target_top_line = ed.cursor_line
+    elseif ed.cursor_line >= current_target + visible_lines then
+        target_top_line = ed.cursor_line - visible_lines + 1
     end
     
-    if ed.cursor_line < ed.viewport.top_line then
-        ed.viewport.top_line = ed.cursor_line
+    target_top_line = math.max(1, target_top_line)
+    target_top_line = math.min(target_top_line, math.max(1, #buf.lines - visible_lines + 1))
+    
+    if target_top_line ~= current_target then
+        editor.start_smooth_scroll(ed, target_top_line)
+    end
+end
+
+function editor.start_smooth_scroll(ed, target_line)
+    local config = require("config")
+    if not config.get("smooth_scrolling") then
+        ed.viewport.top_line = target_line
+        ed.viewport.target_top_line = target_line
+        ed.viewport.scroll_animation_time = 0
+        return
     end
     
-    ed.viewport.top_line = math.max(1, ed.viewport.top_line)
-    local max_top_line = math.max(1, #buf.lines - visible_lines + 1)
-    ed.viewport.top_line = math.min(ed.viewport.top_line, max_top_line)
+    ed.viewport.target_top_line = target_line
+    ed.viewport.scroll_animation_time = 0
+end
+
+function editor.update_smooth_scroll(ed, dt)
+    local config = require("config")
+    if not config.get("smooth_scrolling") then
+        return
+    end
+    
+    if ed.viewport.top_line ~= ed.viewport.target_top_line then
+        ed.viewport.scroll_animation_time = ed.viewport.scroll_animation_time + dt
+        
+        local progress = ed.viewport.scroll_animation_time / ed.viewport.scroll_animation_duration
+        progress = math.min(progress, 1.0)
+        
+        local eased_progress = 1 - math.pow(1 - progress, 3)
+        
+        local start_line = ed.viewport.top_line
+        local target_line = ed.viewport.target_top_line
+        
+        if progress >= 1.0 then
+            ed.viewport.top_line = target_line
+            ed.viewport.scroll_animation_time = 0
+        else
+            local animated_line = start_line + (target_line - start_line) * eased_progress
+            ed.viewport.top_line = math.floor(animated_line + 0.5)
+        end
+    end
 end
 
 function editor.scroll_up(ed, buf, lines)
     lines = lines or 1
-    ed.viewport.top_line = math.max(1, ed.viewport.top_line - lines)
+    local new_top_line = math.max(1, ed.viewport.top_line - lines)
+    
+    if new_top_line ~= ed.viewport.top_line then
+        editor.start_smooth_scroll(ed, new_top_line)
+    end
 end
 
 function editor.scroll_down(ed, buf, lines)
     lines = lines or 1
-    local visible_lines = editor.get_visible_line_count()
-    local max_top_line = math.max(1, #buf.lines - visible_lines + 1)
-    ed.viewport.top_line = math.min(max_top_line, ed.viewport.top_line + lines)
+    local max_line = math.max(1, #buf.lines - editor.get_visible_line_count() + 1)
+    local new_top_line = math.min(max_line, ed.viewport.top_line + lines)
+    
+    if new_top_line ~= ed.viewport.top_line then
+        editor.start_smooth_scroll(ed, new_top_line)
+    end
 end
 
 function editor.move_cursor_left(ed, buf, extend_selection)
