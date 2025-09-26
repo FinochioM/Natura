@@ -45,15 +45,19 @@ function welcome.draw()
     local version_width = font:getWidth(current_version)
     love.graphics.print(current_version, center_x - version_width / 2, start_y + 45)
     
+    local current_date = version.get_date()
+    local date_width = font:getWidth(current_date)
+    love.graphics.print(current_date, center_x - date_width / 2, start_y + 65)
+    
     local subtitle_width = font:getWidth(WELCOME_CONTENT.subtitle)
-    love.graphics.print(WELCOME_CONTENT.subtitle, center_x - subtitle_width / 2, start_y + 70)
+    love.graphics.print(WELCOME_CONTENT.subtitle, center_x - subtitle_width / 2, start_y + 90)
     
     colors.set_color("text")
     local commands_title = "Essential Commands:"
     local commands_width = font:getWidth(commands_title)
-    love.graphics.print(commands_title, center_x - commands_width / 2, start_y + 120)
+    love.graphics.print(commands_title, center_x - commands_width / 2, start_y + 140)
     
-    local cmd_start_y = start_y + 150
+    local cmd_start_y = start_y + 170
     for i, cmd in ipairs(WELCOME_CONTENT.commands) do
         local y = cmd_start_y + (i - 1) * 25
         local key_combo = cmd[1]

@@ -26,6 +26,7 @@ local function get_default_config()
         scrollbar_max_opacity = 1.0,
         scrollbar_fade_in_sensitivity = 10.0,
         scrollbar_fade_out_delay_seconds = 2.0,
+        line_height_scale_percent = 120,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",

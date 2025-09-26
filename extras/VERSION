@@ -1,8 +1,8 @@
 [[version]]
-0.1.0
+0.2.0
 
 [[date]]
 26/09/2025
 
 [[data]]
-First version of the editor.
+- Added "line_height_scale_percent" to global config.

@@ -17,22 +17,34 @@ local mouse_state = {
 }
 
 function mouse.screen_to_editor_coords(x, y, ed)
-    local font = love.graphics.getFont()
-    local line_height = font:getHeight()
     local content_start_y = 40
-    local text_start_x = 10
+    local line_height = get_scaled_line_height()
     
     if y < content_start_y then
         return nil, nil
     end
     
-    local relative_y = y - content_start_y
-    local line_offset = math.floor(relative_y / line_height)
-    local line = ed.viewport.top_line + line_offset
+    local line = ed.viewport.top_line + math.floor((y - content_start_y) / line_height)
+    line = math.max(1, math.min(line, #current_buffer.lines))
     
-    local relative_x = x - text_start_x
-    local char_width = font:getWidth("W")
-    local col = math.max(0, math.floor((relative_x + char_width * 0.5) / char_width))
+    local font = love.graphics.getFont()
+    local line_text = current_buffer.lines[line]
+    local col = 0
+    
+    local text_x = 10
+    local target_x = x - text_x
+    
+    if target_x > 0 then
+        for i = 1, #line_text do
+            local char_width = font:getWidth(line_text:sub(i, i))
+            if target_x <= char_width / 2 then
+                col = i - 1
+                break
+            end
+            target_x = target_x - char_width
+            col = i
+        end
+    end
     
     return line, col
 end

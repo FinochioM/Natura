@@ -842,6 +842,15 @@ function get_color_for_token_type(token_type)
     return color_map[token_type] or "code_default"
 end
 
+function get_scaled_line_height()
+    local font = love.graphics.getFont()
+    local base_height = font:getHeight()
+    local config = require("config")
+    local scale_percent = config.get("line_height_scale_percent") or 120
+    
+    return math.floor(base_height * (scale_percent / 100) + 0.5)
+end
+
 function love.draw()    
     local bg_color = colors.get("background")
     love.graphics.clear(bg_color[1], bg_color[2], bg_color[3], bg_color[4])
@@ -882,7 +891,7 @@ function love.draw()
     end
     
     local font = love.graphics.getFont()
-    local line_height = font:getHeight()
+    local line_height = get_scaled_line_height()
     local content_start_y = 40
     
     draw_search_highlights(current_editor, font, line_height, content_start_y)

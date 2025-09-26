@@ -125,11 +125,11 @@ function editor.select_word(ed, buf)
 end
 
 function editor.get_visible_line_count()
-    local font = love.graphics.getFont()
     local window_height = love.graphics.getHeight()
     local content_start_y = 60
     local available_height = window_height - content_start_y
-    return math.floor(available_height / font:getHeight())
+    local line_height = get_scaled_line_height()
+    return math.floor(available_height / line_height)
 end
 
 function editor.get_max_scroll_line(buf)
