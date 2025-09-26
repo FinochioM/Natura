@@ -27,6 +27,7 @@ local function get_default_config()
         scrollbar_fade_in_sensitivity = 10.0,
         scrollbar_fade_out_delay_seconds = 2.0,
         line_height_scale_percent = 120,
+        max_editor_width = -1,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",
@@ -168,29 +169,24 @@ indent_using: spaces
 tab_size: 4
 window_width: 800
 window_height: 600
-
-# Color Theme - modify these hex values (RRGGBBAA format)
-colors.background: 1A1A1AFF
-colors.background_dark: 141414FF
-colors.text: FFFFFFFF
-colors.text_dim: 999999FF
-colors.cursor: CCCCCCFF
-colors.cursor_inactive: 808080FF
-colors.selection_active: 4D6699CC
-colors.selection_inactive: 33334D99
-colors.search_result_active: CC9933CC
-colors.search_result_inactive: 99661A99
-colors.code_default: FFFFFFFF
-colors.code_comment: 7FCC7FFF
-colors.code_string_literal: CC9966FF
-colors.code_keyword: 99CCFFFF
-colors.code_function: B3E6B3FF
-colors.code_type: E6B399FF
-colors.ui_default: CCCCCCFF
-colors.ui_dim: 999999FF
-colors.ui_error: FF6666FF
-colors.ui_warning: FFCC4DFF
-colors.ui_success: 66CC66FF
+maximize_on_start: false
+open_on_the_biggest_monitor: false
+cursor_as_block: true
+cursor_blink_time_in_seconds: 5
+highlight_selection_occurrences: true
+highlight_line_with_cursor: false
+highlight_matching_brackets: false
+show_paste_effect: true
+smooth_scrolling: true
+scroll_beyond_last_line: true
+show_scrollbar_marks: true
+scrollbar_width_scale: 1.0
+scrollbar_min_opacity: 0.0
+scrollbar_max_opacity: 1.0
+scrollbar_fade_in_sensitivity: 10.0
+scrollbar_fade_out_delay_seconds: 2.0
+line_height_scale_percent: 120
+max_editor_width: -1
 
 # Keybinds - modify these to customize your shortcuts
 keybinds.ctrl+s: save
@@ -224,6 +220,30 @@ keybinds.home: line_start
 keybinds.end: line_end
 keybinds.shift+delete: delete_line
 keybinds.escape: clear_selection
+keybinds.alt+x: show_actions
+
+# Color Theme - modify these hex values (RRGGBBAA format)
+colors.background: 1A1A1AFF
+colors.background_dark: 141414FF
+colors.text: FFFFFFFF
+colors.text_dim: 999999FF
+colors.cursor: CCCCCCFF
+colors.cursor_inactive: 808080FF
+colors.selection_active: 4D6699CC
+colors.selection_inactive: 33334D99
+colors.search_result_active: CC9933CC
+colors.search_result_inactive: 99661A99
+colors.code_default: FFFFFFFF
+colors.code_comment: 7FCC7FFF
+colors.code_string_literal: CC9966FF
+colors.code_keyword: 99CCFFFF
+colors.code_function: B3E6B3FF
+colors.code_type: E6B399FF
+colors.ui_default: CCCCCCFF
+colors.ui_dim: 999999FF
+colors.ui_error: FF6666FF
+colors.ui_warning: FFCC4DFF
+colors.ui_success: 66CC66FF
 ]]
     
     if write_file("natura.config", content) then

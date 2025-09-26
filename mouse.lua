@@ -19,8 +19,14 @@ local mouse_state = {
 function mouse.screen_to_editor_coords(x, y, ed)
     local content_start_y = 40
     local line_height = get_scaled_line_height()
+    local text_start_x = get_text_start_x()
     
     if y < content_start_y then
+        return nil, nil
+    end
+    
+    local editor_area = get_editor_content_area()
+    if x < editor_area.x or x > editor_area.x + editor_area.width then
         return nil, nil
     end
     
@@ -31,8 +37,7 @@ function mouse.screen_to_editor_coords(x, y, ed)
     local line_text = current_buffer.lines[line]
     local col = 0
     
-    local text_x = 10
-    local target_x = x - text_x
+    local target_x = x - text_start_x
     
     if target_x > 0 then
         for i = 1, #line_text do

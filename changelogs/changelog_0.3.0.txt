@@ -1,0 +1,3 @@
+﻿added "max_editor_width" to the global file.
+automatic commit logic
+automatic changelog generation.

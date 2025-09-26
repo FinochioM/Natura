@@ -47,7 +47,7 @@
     smooth_scrolling:                                   DONE
     scroll_beyond_last_line:                            DONE
     line_height_scale_percent:                          DONE
-    max_editor_width:                                   -
+    max_editor_width:                                   DONE
     can_cancel_go_to_line:                              -
     copy_whole_line_without_selection:                  -
     editor_history_size:                                -

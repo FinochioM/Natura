@@ -380,7 +380,7 @@ function find_selection_occurrences(ed, buf)
     return occurrences
 end
 
-function draw_selection_occurrences(ed, buf, font, line_height, content_start_y)
+function draw_selection_occurrences(ed, buf, font, line_height, content_start_y, text_start_x)
     local occurrences = find_selection_occurrences(ed, buf)
     if #occurrences == 0 then
         return
@@ -401,7 +401,7 @@ function draw_selection_occurrences(ed, buf, font, line_height, content_start_y)
             local before_text = line:sub(1, occurrence.start_col)
             local occurrence_text = line:sub(occurrence.start_col + 1, occurrence.end_col)
             
-            local x = 10 + font:getWidth(before_text)
+            local x = text_start_x + font:getWidth(before_text)
             local width = font:getWidth(occurrence_text)
             
             love.graphics.rectangle("fill", x, y, width, line_height)
@@ -409,7 +409,7 @@ function draw_selection_occurrences(ed, buf, font, line_height, content_start_y)
     end
 end
 
-function draw_line_highlight(ed, buf, font, line_height, content_start_y)
+function draw_line_highlight(ed, buf, font, line_height, content_start_y, text_start_x)
     local config = require("config")
     if not config.get("highlight_line_with_cursor") then
         return
@@ -428,9 +428,9 @@ function draw_line_highlight(ed, buf, font, line_height, content_start_y)
     colors.set_color("line_highlight")
     
     local cursor_y = content_start_y + (ed.cursor_line - ed.viewport.top_line) * line_height
-    local line_width = love.graphics.getWidth() - 10  -- Full width minus left margin
+    local editor_area = get_editor_content_area()
     
-    love.graphics.rectangle("fill", 10, cursor_y, line_width, line_height)
+    love.graphics.rectangle("fill", editor_area.x, cursor_y, editor_area.width, line_height)
 end
 
 local function draw_search_bar(ed)
@@ -497,7 +497,7 @@ local function draw_goto_bar(ed)
     love.graphics.print(text, bar_x + 5, bar_y + 5)
 end
 
-function draw_search_highlights(ed, font, line_height, content_start_y)
+function draw_search_highlights(ed, font, line_height, content_start_y, text_start_x)
     local colors = require("colors")
     
     if not ed.search.active or #ed.search.results == 0 then
@@ -511,7 +511,7 @@ function draw_search_highlights(ed, font, line_height, content_start_y)
             local before_match = line:sub(1, result.start_col)
             local match_text = line:sub(result.start_col + 1, result.end_col)
             
-            local x = 10 + font:getWidth(before_match)
+            local x = text_start_x + font:getWidth(before_match)
             local width = font:getWidth(match_text)
             
             if i == ed.search.current_result then
@@ -525,7 +525,7 @@ function draw_search_highlights(ed, font, line_height, content_start_y)
     end
 end
 
-function draw_selection_highlight(ed, font, line_height, content_start_y)
+function draw_selection_highlight(ed, font, line_height, content_start_y, text_start_x)
     local colors = require("colors")
     
     if not editor.has_selection(ed) then
@@ -545,7 +545,7 @@ function draw_selection_highlight(ed, font, line_height, content_start_y)
             local before_selection = line:sub(1, start_col)
             local selection_text = line:sub(start_col + 1, end_col)
             
-            local x = 10 + font:getWidth(before_selection)
+            local x = text_start_x + font:getWidth(before_selection)
             local width = font:getWidth(selection_text)
             
             colors.set_color("selection_active")
@@ -682,7 +682,7 @@ function find_matching_bracket(buf, line, col)
     return nil
 end
 
-function draw_bracket_highlights(ed, buf, font, line_height, content_start_y)
+function draw_bracket_highlights(ed, buf, font, line_height, content_start_y, text_start_x)
     local config = require("config")
     if not config.get("highlight_matching_brackets") then
         return
@@ -731,7 +731,7 @@ function draw_bracket_highlights(ed, buf, font, line_height, content_start_y)
                 local before_bracket = bracket_line:sub(1, bracket.col)
                 local bracket_char = bracket_line:sub(bracket.col + 1, bracket.col + 1)
                 
-                local x = 10 + font:getWidth(before_bracket)
+                local x = text_start_x + font:getWidth(before_bracket)
                 local width = font:getWidth(bracket_char)
                 
                 love.graphics.rectangle("fill", x, y, width, line_height)
@@ -770,7 +770,7 @@ function update_paste_animations(dt)
     end
 end
 
-function draw_paste_animations(ed, buf, font, line_height, content_start_y)
+function draw_paste_animations(ed, buf, font, line_height, content_start_y, text_start_x)
     if #paste_animations == 0 then
         return
     end
@@ -805,7 +805,7 @@ function draw_paste_animations(ed, buf, font, line_height, content_start_y)
                     local before_text = line_text:sub(1, start_col)
                     local highlighted_text = line_text:sub(start_col + 1, end_col)
                     
-                    local x = 10 + font:getWidth(before_text)
+                    local x = text_start_x + font:getWidth(before_text)
                     local width = font:getWidth(highlighted_text)
                     
                     local paste_color = colors.get("paste_animation")
@@ -851,6 +851,34 @@ function get_scaled_line_height()
     return math.floor(base_height * (scale_percent / 100) + 0.5)
 end
 
+function get_editor_content_area()
+    local config = require("config")
+    local max_width = config.get("max_editor_width") or -1
+    local window_width = love.graphics.getWidth()
+    
+    if max_width <= 0 then
+        return {
+            x = 10,
+            width = window_width - 20,
+            content_x = 10
+        }
+    else
+        local content_width = math.min(max_width, window_width - 40)
+        local content_x = (window_width - content_width) / 2
+        
+        return {
+            x = content_x,
+            width = content_width,
+            content_x = content_x
+        }
+    end
+end
+
+function get_text_start_x()
+    local editor_area = get_editor_content_area()
+    return editor_area.content_x
+end
+
 function love.draw()    
     local bg_color = colors.get("background")
     love.graphics.clear(bg_color[1], bg_color[2], bg_color[3], bg_color[4])
@@ -893,13 +921,14 @@ function love.draw()
     local font = love.graphics.getFont()
     local line_height = get_scaled_line_height()
     local content_start_y = 40
+    local text_start_x = get_text_start_x()
     
-    draw_search_highlights(current_editor, font, line_height, content_start_y)
-    draw_selection_highlight(current_editor, font, line_height, content_start_y)
-    draw_selection_occurrences(current_editor, current_buffer, font, line_height, content_start_y)
-    draw_line_highlight(current_editor, current_buffer, font, line_height, content_start_y)
-    draw_bracket_highlights(current_editor, current_buffer, font, line_height, content_start_y)
-    draw_paste_animations(current_editor, current_buffer, font, line_height, content_start_y)
+    draw_search_highlights(current_editor, font, line_height, content_start_y, text_start_x)
+    draw_selection_highlight(current_editor, font, line_height, content_start_y, text_start_x)
+    draw_selection_occurrences(current_editor, current_buffer, font, line_height, content_start_y, text_start_x)
+    draw_line_highlight(current_editor, current_buffer, font, line_height, content_start_y, text_start_x)
+    draw_bracket_highlights(current_editor, current_buffer, font, line_height, content_start_y, text_start_x)
+    draw_paste_animations(current_editor, current_buffer, font, line_height, content_start_y, text_start_x)
     
     colors.set_color("code_default")
     
@@ -910,7 +939,7 @@ function love.draw()
         local line = current_buffer.lines[i]
         local y = content_start_y + (i - current_editor.viewport.top_line) * line_height
         
-        draw_line_with_syntax_highlighting(line, 10, y, i, current_buffer.language) -- Pass line number
+        draw_line_with_syntax_highlighting(line, text_start_x, y, i, current_buffer.language)
     end
     
     if not welcome.is_showing() then
@@ -918,7 +947,7 @@ function love.draw()
         current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
             local cursor_y = content_start_y + (current_editor.cursor_line - current_editor.viewport.top_line) * line_height
             local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
-            local cursor_x = 10 + font:getWidth(cursor_text)
+            local cursor_x = text_start_x + font:getWidth(cursor_text)
             
             if cursor_visible then
                 local config = require("config")
