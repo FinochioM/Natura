@@ -264,6 +264,86 @@ local function draw_selection_highlight(ed, font, line_height, content_start_y)
     end
 end
 
+function find_selection_occurrences(ed, buf)
+    if not editor.has_selection(ed) then
+        return {}
+    end
+    
+    local config = require("config")
+    if not config.get("highlight_selection_occurrences") then
+        return {}
+    end
+    
+    local bounds = editor.get_selection_bounds(ed)
+    if not bounds then return {} end
+    
+    local selected_text = ""
+    if bounds.start_line == bounds.end_line then
+        local line = buf.lines[bounds.start_line]
+        selected_text = line:sub(bounds.start_col + 1, bounds.end_col)
+    else
+        return {}
+    end
+    
+    if selected_text == "" or selected_text:match("^%s*$") then
+        return {}
+    end
+    
+    local occurrences = {}
+    for line_num = 1, #buf.lines do
+        local line = buf.lines[line_num]
+        local start_pos = 1
+        
+        while true do
+            local found_start, found_end = line:find(selected_text, start_pos, true)
+            if not found_start then
+                break
+            end
+            
+            if not (line_num == bounds.start_line and found_start == bounds.start_col + 1) then
+                table.insert(occurrences, {
+                    line = line_num,
+                    start_col = found_start - 1,
+                    end_col = found_end
+                })
+            end
+            
+            start_pos = found_start + 1
+        end
+    end
+    
+    return occurrences
+end
+
+function draw_selection_occurrences(ed, buf, font, line_height, content_start_y)
+    local occurrences = find_selection_occurrences(ed, buf)
+    if #occurrences == 0 then
+        return
+    end
+    
+    local colors = require("colors")
+    colors.set_color("selection_highlight")
+    
+    local visible_lines = editor.get_visible_line_count()
+    local viewport_start = ed.viewport.top_line
+    local viewport_end = viewport_start + visible_lines - 1
+    
+    for _, occurrence in ipairs(occurrences) do
+        if occurrence.line >= viewport_start and occurrence.line <= viewport_end then
+            local y = content_start_y + (occurrence.line - viewport_start) * line_height
+            local line = buf.lines[occurrence.line]
+            
+            local before_text = line:sub(1, occurrence.start_col)
+            local occurrence_text = line:sub(occurrence.start_col + 1, occurrence.end_col)
+            
+            local x = 10 + font:getWidth(before_text)
+            local width = font:getWidth(occurrence_text)
+            
+            love.graphics.rectangle("fill", x, y, width, line_height)
+        end
+    end
+end
+
 local function draw_search_bar(ed)
     if not ed.search.active then return end
     
@@ -476,6 +556,7 @@ function love.draw()
     
     draw_search_highlights(current_editor, font, line_height, content_start_y)
     draw_selection_highlight(current_editor, font, line_height, content_start_y)
+    draw_selection_occurrences(current_editor, current_buffer, font, line_height, content_start_y)
     
     colors.set_color("code_default")
     

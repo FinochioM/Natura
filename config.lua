@@ -14,6 +14,7 @@ local function get_default_config()
         open_on_the_biggest_monitor = false,
         cursor_as_block = true,
         cursor_blink_time_in_seconds = 5,
+        highlight_selection_occurrences = true,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",
@@ -27,6 +28,7 @@ local function get_default_config()
             
             selection_active = "1C4449FF",
             selection_inactive = "1C44497F",
+            selection_highlight = "599999FF",
             
             search_result_active = "8E772EFF",
             search_result_inactive = "FCEDFC26",
