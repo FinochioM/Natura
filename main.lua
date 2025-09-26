@@ -177,6 +177,7 @@ end
 function love.keypressed(key)
     cursor_blink_start_time = love.timer.getTime()
     cursor_visible = true
+    
     if not keymap.handle_key(key, current_editor, current_buffer) then
         print("Unhandled key: " .. key)
     end
@@ -580,24 +581,40 @@ function love.draw()
     local bg_color = colors.get("background")
     love.graphics.clear(bg_color[1], bg_color[2], bg_color[3], bg_color[4])
     
-    if welcome.is_showing() then
+    local any_dialog_active = current_editor.file_dialog.active or 
+                            current_editor.actions_menu.active or
+                            current_editor.search.active or
+                            current_editor.goto_state.active
+
+    if welcome.is_showing() and not any_dialog_active then
         welcome.draw()
         return
     end
 
-    colors.set_color("text")
+    if welcome.is_showing() and any_dialog_active then
+        welcome.draw()
+    end
+
     local title = "Natura Editor"
+    colors.set_color("text")
     if current_buffer.filepath then
         title = title .. " - " .. current_buffer.filepath
         if current_buffer.dirty then
             title = title .. " *"
         end
     end
-    love.graphics.print(title, 10, 10)
+
+    if not welcome.is_showing() then
+        love.graphics.print(title, 10, 10)
+    end
 
     colors.set_color("ui_success")
+
     local debug_lang = "" .. (current_buffer.language or "None")
-    love.graphics.print(debug_lang, love.graphics.getWidth() - 50, 10)
+
+    if not welcome.is_showing() then
+        love.graphics.print(debug_lang, love.graphics.getWidth() - 50, 10)
+    end
     
     local font = love.graphics.getFont()
     local line_height = font:getHeight()
@@ -658,18 +675,21 @@ function love.draw()
     color_preview.draw(current_editor, current_buffer)
     
     colors.set_color("text_dim")
-    local debug_text = string.format("Line %d/%d (showing %d-%d)", 
-        current_editor.cursor_line, #current_buffer.lines,
-        current_editor.viewport.top_line, end_line)
-    
-    if editor.has_selection(current_editor) then
-        debug_text = debug_text .. " [SELECTION]"
+
+    if not welcome.is_showing() then
+        local debug_text = string.format("Line %d/%d (showing %d-%d)", 
+            current_editor.cursor_line, #current_buffer.lines,
+            current_editor.viewport.top_line, end_line)
+        
+        if editor.has_selection(current_editor) then
+            debug_text = debug_text .. " [SELECTION]"
+        end
+        
+        if current_editor.search.active then
+            debug_text = debug_text .. " [SEARCH]"
+        end
+        love.graphics.print(debug_text, 10, love.graphics.getHeight() - 20)
     end
-    
-    if current_editor.search.active then
-        debug_text = debug_text .. " [SEARCH]"
-    end
-    love.graphics.print(debug_text, 10, love.graphics.getHeight() - 20)
 end
 
 function love.quit()
