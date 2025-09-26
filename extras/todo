@@ -93,9 +93,11 @@
     + Color preview with test code when modifying the "colors" section in global file. Color wheel. DONE.
     + Add mouse support. DONE.
     + Add color and parsing for global config file. DONE.
+    + Add a scrollbar. DONE.
     + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]. WIP.
     + When i am writing code and I press enter to move to the new line, the cursor should maintain the indentation from the previous line.
     + Live updates for everything when updated. Like when updating a file.
     + More UI feedback for the user.
     + Zoom in and out.
     + When a panel opens, closed the other panels so only one can be active at a time.
+    + cursor as block should have rounded edges.

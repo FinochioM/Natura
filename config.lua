@@ -76,7 +76,11 @@ local function get_default_config()
             ui_error_bright = "FF0000FF",
             ui_warning = "F8AD34FF",
             ui_warning_dim = "986032FF",
-            ui_success = "227722FF"
+            ui_success = "227722FF",
+
+            scrollbar = "33CCCC19",
+            scrollbar_hover = "33CCCC4C", 
+            scrollbar_background = "10191F4C",
         },
         keybinds = {
             ["ctrl+s"] = "save",

@@ -26,7 +26,7 @@ function scrollbar.draw(editor_state, buffer, content_area)
         return
     end
     
-    local scrollbar_width = math.max(8 * width_scale, 4)
+    local scrollbar_width = math.max(12 * width_scale, 8)
     local scrollbar_area = {
         x = content_area.x + content_area.w - scrollbar_width,
         y = content_area.y,
@@ -46,22 +46,41 @@ function scrollbar.draw(editor_state, buffer, content_area)
     
     local thumb_y = scrollbar_area.y + (scrollbar_area.h - thumb_height) * scroll_percentage
     
-    local thumb_rect = {
-        x = scrollbar_area.x + 2,
-        y = thumb_y,
-        w = scrollbar_area.w - 4,
-        h = thumb_height
-    }
-    
     local opacity = scrollbar.calculate_opacity(scrollbar_area, "main_scrollbar")
     
     if opacity > 0 then
-        colors.set_color("ui_dim")
-        love.graphics.setColor(colors.get("ui_dim")[1], colors.get("ui_dim")[2], colors.get("ui_dim")[3], opacity * 0.3)
-        love.graphics.rectangle("fill", scrollbar_area.x, scrollbar_area.y, scrollbar_area.w, scrollbar_area.h)
+        colors.set_color("scrollbar_background")
+        local bg_color = colors.get("scrollbar_background")
+        love.graphics.setColor(bg_color[1], bg_color[2], bg_color[3], opacity)
+        love.graphics.rectangle("fill", scrollbar_area.x, scrollbar_area.y, scrollbar_area.w, scrollbar_area.h, 3, 3)
         
-        colors.set_color("ui_default")
-        love.graphics.setColor(colors.get("ui_default")[1], colors.get("ui_default")[2], colors.get("ui_default")[3], opacity)
+        colors.set_color("scrollbar_background")
+        love.graphics.setColor(bg_color[1], bg_color[2], bg_color[3], opacity)
+        love.graphics.rectangle("fill", scrollbar_area.x, scrollbar_area.y + 3, 1, scrollbar_area.h - 6)
+        
+        local thumb_rect = {
+            x = scrollbar_area.x + 1,  -- 1px inset from left
+            y = thumb_y,
+            w = scrollbar_area.w - 2,  -- 1px inset from both sides
+            h = thumb_height
+        }
+        
+        if thumb_rect.h < 5 then
+            thumb_rect.h = 5
+        end
+        
+        local mouse_x, mouse_y = love.mouse.getPosition()
+        local is_hovering = mouse_x >= scrollbar_area.x and mouse_x <= scrollbar_area.x + scrollbar_area.w and
+                           mouse_y >= scrollbar_area.y and mouse_y <= scrollbar_area.y + scrollbar_area.h
+        
+        local thumb_color_name = "scrollbar"
+        if scrollbar_active or is_hovering then
+            thumb_color_name = "scrollbar_hover"
+        end
+        
+        colors.set_color(thumb_color_name)
+        local thumb_color = colors.get(thumb_color_name)
+        love.graphics.setColor(thumb_color[1], thumb_color[2], thumb_color[3], opacity)
         love.graphics.rectangle("fill", thumb_rect.x, thumb_rect.y, thumb_rect.w, thumb_rect.h, 2, 2)
     end
     
