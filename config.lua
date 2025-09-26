@@ -17,6 +17,7 @@ local function get_default_config()
         highlight_selection_occurrences = true,
         highlight_line_with_cursor = false,
         highlight_matching_brackets = false,
+        show_paste_effect = true,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",
@@ -33,6 +34,7 @@ local function get_default_config()
             selection_inactive = "1C44497F",
             selection_highlight = "599999FF",
             bracket_highlight = "E8FCFE30",
+            paste_animation = "1C4449FF",
             
             search_result_active = "8E772EFF",
             search_result_inactive = "FCEDFC26",

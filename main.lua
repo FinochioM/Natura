@@ -19,6 +19,9 @@ local cursor_visible = true
 local cursor_blink_start_time = 0
 local CURSOR_BLINK_SPEED = 0.5
 
+local paste_animations = {}
+local PASTE_ANIMATION_SPEED = 1.0
+
 function love.load(args)
     local config = require("config")
     config.load()
@@ -197,6 +200,8 @@ end
 
 function love.update(dt)
     file_check_timer = file_check_timer + dt
+
+    update_paste_animations(dt)
 
     local config = require("config")
     local blink_time = config.get("cursor_blink_time_in_seconds") or 5
@@ -696,6 +701,83 @@ function draw_bracket_highlights(ed, buf, font, line_height, content_start_y)
     end
 end
 
+function add_paste_animation(start_line, start_col, end_line, end_col)
+    local config = require("config")
+    if not config.get("show_paste_effect") then
+        return
+    end
+    
+    local animation = {
+        start_line = start_line,
+        start_col = start_col,
+        end_line = end_line,
+        end_col = end_col,
+        start_time = love.timer.getTime()
+    }
+    
+    table.insert(paste_animations, animation)
+end
+
+function update_paste_animations(dt)
+    local current_time = love.timer.getTime()
+    
+    for i = #paste_animations, 1, -1 do
+        local anim = paste_animations[i]
+        local elapsed = current_time - anim.start_time
+        
+        if elapsed >= PASTE_ANIMATION_SPEED then
+            table.remove(paste_animations, i)
+        end
+    end
+end
+
+function draw_paste_animations(ed, buf, font, line_height, content_start_y)
+    if #paste_animations == 0 then
+        return
+    end
+    
+    local colors = require("colors")
+    local current_time = love.timer.getTime()
+    local visible_lines = editor.get_visible_line_count()
+    local viewport_start = ed.viewport.top_line
+    local viewport_end = viewport_start + visible_lines - 1
+    
+    for _, anim in ipairs(paste_animations) do
+        local elapsed = current_time - anim.start_time
+        if elapsed < PASTE_ANIMATION_SPEED then
+            local alpha = 1.0 - (elapsed / PASTE_ANIMATION_SPEED)
+            
+            for line_num = anim.start_line, anim.end_line do
+                if line_num >= viewport_start and line_num <= viewport_end then
+                    local y = content_start_y + (line_num - viewport_start) * line_height
+                    local line_text = buf.lines[line_num]
+                    
+                    local start_col, end_col
+                    if line_num == anim.start_line and line_num == anim.end_line then
+                        start_col, end_col = anim.start_col, anim.end_col
+                    elseif line_num == anim.start_line then
+                        start_col, end_col = anim.start_col, #line_text
+                    elseif line_num == anim.end_line then
+                        start_col, end_col = 0, anim.end_col
+                    else
+                        start_col, end_col = 0, #line_text
+                    end
+                    
+                    local before_text = line_text:sub(1, start_col)
+                    local highlighted_text = line_text:sub(start_col + 1, end_col)
+                    
+                    local x = 10 + font:getWidth(before_text)
+                    local width = font:getWidth(highlighted_text)
+                    
+                    local paste_color = colors.get("paste_animation")
+                    love.graphics.setColor(paste_color[1], paste_color[2], paste_color[3], paste_color[4] * alpha)
+                    love.graphics.rectangle("fill", x, y, width, line_height)
+                end
+            end
+        end
+    end
+end
+
 function get_color_for_token_type(token_type)
     local color_map = {
         ["keyword"] = "code_keyword",
@@ -769,6 +851,7 @@ function love.draw()
     draw_selection_occurrences(current_editor, current_buffer, font, line_height, content_start_y)
     draw_line_highlight(current_editor, current_buffer, font, line_height, content_start_y)
     draw_bracket_highlights(current_editor, current_buffer, font, line_height, content_start_y)
+    draw_paste_animations(current_editor, current_buffer, font, line_height, content_start_y)
     
     colors.set_color("code_default")
     

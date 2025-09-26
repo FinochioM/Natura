@@ -19,49 +19,56 @@ function actions.copy(ed, buf)
 end
 
 function actions.paste(ed, buf)
-    local text_to_paste = love.system.getClipboardText()
-    
-    if text_to_paste == "" then
-        text_to_paste = clipboard_text
+    local clipboard_text = love.system.getClipboardText()
+    if not clipboard_text or clipboard_text == "" then
+        return
     end
     
-    if text_to_paste ~= "" then
-        if editor.has_selection(ed) then
-            actions.delete_selection(ed, buf)
-        end
-
-        local lines = {}
-        for line in text_to_paste:gmatch("([^\n]*)\n?") do
-            if line ~= "" or text_to_paste:find("\n") then
-                table.insert(lines, line)
-            end
+    local paste_start_line = ed.cursor_line
+    local paste_start_col = ed.cursor_col
+    
+    if editor.has_selection(ed) then
+        local actions = require("actions")
+        actions.delete_selection(ed, buf)
+    end
+    
+    local lines = {}
+    for line in clipboard_text:gmatch("([^\r\n]*)\r?\n?") do
+        table.insert(lines, line)
+    end
+    
+    if #lines == 0 then
+        lines = {clipboard_text}
+    end
+    
+    local current_line = buf.lines[ed.cursor_line]
+    local before_cursor = current_line:sub(1, ed.cursor_col)
+    local after_cursor = current_line:sub(ed.cursor_col + 1)
+    
+    if #lines == 1 then
+        buf.lines[ed.cursor_line] = before_cursor .. lines[1] .. after_cursor
+        ed.cursor_col = ed.cursor_col + #lines[1]
+        
+        add_paste_animation(paste_start_line, paste_start_col, ed.cursor_line, ed.cursor_col)
+    else
+        buf.lines[ed.cursor_line] = before_cursor .. lines[1]
+        
+        for i = 2, #lines - 1 do
+            table.insert(buf.lines, ed.cursor_line + i - 1, lines[i])
         end
         
-        if #lines == 0 then
-            lines = {text_to_paste}
-        end
-
-        local undo = require("undo")
-        undo.record_insertion(ed.undo_state, ed.cursor_line, ed.cursor_col, text_to_paste, ed)
-
-        if #lines == 1 then
-            ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, text_to_paste)
-        else
-            local first_line = lines[1]
-            ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, first_line)
-            
-            for i = 2, #lines do
-                buffer.split_line(buf, ed.cursor_line, ed.cursor_col)
-                ed.cursor_line = ed.cursor_line + 1
-                ed.cursor_col = 0
-                ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, lines[i])
-            end
-        end
-
-        editor.update_viewport(ed, buf)
+        local last_line = lines[#lines]
+        table.insert(buf.lines, ed.cursor_line + #lines - 1, last_line .. after_cursor)
+        
+        ed.cursor_line = ed.cursor_line + #lines - 1
+        ed.cursor_col = #last_line
+        
+        add_paste_animation(paste_start_line, paste_start_col, ed.cursor_line, ed.cursor_col)
     end
+    
+    buf.dirty = true
+    editor.update_viewport(ed, buf)
 end
-
 
 function actions.cut(ed, buf)
     actions.copy(ed, buf)
