@@ -552,6 +552,150 @@ function draw_line_with_syntax_highlighting(line, x, y, line_num, language)
     end
 end
 
+function is_bracket(char)
+    return char == "(" or char == ")" or char == "[" or char == "]" or char == "{" or char == "}"
+end
+
+function get_matching_bracket(bracket)
+    local pairs = {
+        ["("] = ")",
+        [")"] = "(",
+        ["["] = "]",
+        ["]"] = "[",
+        ["{"] = "}",
+        ["}"] = "{"
+    }
+    return pairs[bracket]
+end
+
+function is_opening_bracket(bracket)
+    return bracket == "(" or bracket == "[" or bracket == "{"
+end
+
+function find_matching_bracket(buf, line, col)
+    if line < 1 or line > #buf.lines then
+        return nil
+    end
+    
+    local current_line = buf.lines[line]
+    if col < 0 or col >= #current_line then
+        return nil
+    end
+    
+    local bracket = current_line:sub(col + 1, col + 1)
+    if not is_bracket(bracket) then
+        return nil
+    end
+    
+    local matching_bracket = get_matching_bracket(bracket)
+    local is_opening = is_opening_bracket(bracket)
+    local stack_count = 1
+    
+    if is_opening then
+        local search_col = col + 1
+        local search_line = line
+        
+        while search_line <= #buf.lines do
+            local line_text = buf.lines[search_line]
+            local start_col = (search_line == line) and search_col + 1 or 1
+            
+            for i = start_col, #line_text do
+                local char = line_text:sub(i, i)
+                if char == bracket then
+                    stack_count = stack_count + 1
+                elseif char == matching_bracket then
+                    stack_count = stack_count - 1
+                    if stack_count == 0 then
+                        return {line = search_line, col = i - 1}
+                    end
+                end
+            end
+            search_line = search_line + 1
+        end
+    else
+        local search_col = col - 1
+        local search_line = line
+        
+        while search_line >= 1 do
+            local line_text = buf.lines[search_line]
+            local end_col = (search_line == line) and search_col + 1 or #line_text
+            
+            for i = end_col, 1, -1 do
+                local char = line_text:sub(i, i)
+                if char == bracket then
+                    stack_count = stack_count + 1
+                elseif char == matching_bracket then
+                    stack_count = stack_count - 1
+                    if stack_count == 0 then
+                        return {line = search_line, col = i - 1}
+                    end
+                end
+            end
+            search_line = search_line - 1
+        end
+    end
+    
+    return nil
+end
+
+function draw_bracket_highlights(ed, buf, font, line_height, content_start_y)
+    local config = require("config")
+    if not config.get("highlight_matching_brackets") then
+        return
+    end
+    
+    local cursor_line = ed.cursor_line
+    local cursor_col = ed.cursor_col
+    local line_text = buf.lines[cursor_line]
+    
+    local brackets_to_highlight = {}
+    
+    if cursor_col < #line_text then
+        local char_at_cursor = line_text:sub(cursor_col + 1, cursor_col + 1)
+        if is_bracket(char_at_cursor) then
+            local match = find_matching_bracket(buf, cursor_line, cursor_col)
+            if match then
+                table.insert(brackets_to_highlight, {line = cursor_line, col = cursor_col})
+                table.insert(brackets_to_highlight, match)
+            end
+        end
+    end
+    
+    if cursor_col > 0 then
+        local char_before_cursor = line_text:sub(cursor_col, cursor_col)
+        if is_bracket(char_before_cursor) then
+            local match = find_matching_bracket(buf, cursor_line, cursor_col - 1)
+            if match then
+                table.insert(brackets_to_highlight, {line = cursor_line, col = cursor_col - 1})
+                table.insert(brackets_to_highlight, match)
+            end
+        end
+    end
+
+    if #brackets_to_highlight > 0 then
+        local colors = require("colors")
+        colors.set_color("bracket_highlight")
+        
+        local visible_lines = editor.get_visible_line_count()
+        local viewport_start = ed.viewport.top_line
+        local viewport_end = viewport_start + visible_lines - 1
+        
+        for _, bracket in ipairs(brackets_to_highlight) do
+            if bracket.line >= viewport_start and bracket.line <= viewport_end then
+                local y = content_start_y + (bracket.line - viewport_start) * line_height
+                local bracket_line = buf.lines[bracket.line]
+                local before_bracket = bracket_line:sub(1, bracket.col)
+                local bracket_char = bracket_line:sub(bracket.col + 1, bracket.col + 1)
+                
+                local x = 10 + font:getWidth(before_bracket)
+                local width = font:getWidth(bracket_char)
+                
+                love.graphics.rectangle("fill", x, y, width, line_height)
+            end
+        end
+    end
+end
+
 function get_color_for_token_type(token_type)
     local color_map = {
         ["keyword"] = "code_keyword",
@@ -624,6 +768,7 @@ function love.draw()
     draw_selection_highlight(current_editor, font, line_height, content_start_y)
     draw_selection_occurrences(current_editor, current_buffer, font, line_height, content_start_y)
     draw_line_highlight(current_editor, current_buffer, font, line_height, content_start_y)
+    draw_bracket_highlights(current_editor, current_buffer, font, line_height, content_start_y)
     
     colors.set_color("code_default")
     
@@ -636,33 +781,34 @@ function love.draw()
         
         draw_line_with_syntax_highlighting(line, 10, y, i, current_buffer.language) -- Pass line number
     end
-        
-    if current_editor.cursor_line >= current_editor.viewport.top_line and 
-       current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
-        local cursor_y = content_start_y + (current_editor.cursor_line - current_editor.viewport.top_line) * line_height
-        local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
-        local cursor_x = 10 + font:getWidth(cursor_text)
-        
-        if cursor_visible then
-            local config = require("config")
-            local cursor_as_block = config.get("cursor_as_block")
+    
+    if not welcome.is_showing() then
+        if current_editor.cursor_line >= current_editor.viewport.top_line and 
+        current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
+            local cursor_y = content_start_y + (current_editor.cursor_line - current_editor.viewport.top_line) * line_height
+            local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
+            local cursor_x = 10 + font:getWidth(cursor_text)
             
-            colors.set_color("cursor")
-            if cursor_as_block then
-                local char_width = font:getWidth(" ")
-                love.graphics.rectangle("fill", cursor_x, cursor_y, char_width, line_height)
+            if cursor_visible then
+                local config = require("config")
+                local cursor_as_block = config.get("cursor_as_block")
                 
-                local char_under_cursor = string.sub(current_buffer.lines[current_editor.cursor_line], current_editor.cursor_col + 1, current_editor.cursor_col + 1)
-                if char_under_cursor ~= "" then
-                    colors.set_color("background")
-                    love.graphics.print(char_under_cursor, cursor_x, cursor_y)
+                colors.set_color("cursor")
+                if cursor_as_block then
+                    local char_width = font:getWidth(" ")
+                    love.graphics.rectangle("fill", cursor_x, cursor_y, char_width, line_height)
+                    
+                    local char_under_cursor = string.sub(current_buffer.lines[current_editor.cursor_line], current_editor.cursor_col + 1, current_editor.cursor_col + 1)
+                    if char_under_cursor ~= "" then
+                        colors.set_color("background")
+                        love.graphics.print(char_under_cursor, cursor_x, cursor_y)
+                    end
+                else
+                    love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
                 end
-            else
-                love.graphics.line(cursor_x, cursor_y, cursor_x, cursor_y + line_height)
             end
         end
     end
-    
     draw_search_bar(current_editor)
     draw_goto_bar(current_editor)
 
