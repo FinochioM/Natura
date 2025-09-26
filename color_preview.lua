@@ -475,20 +475,6 @@ function color_preview.draw(ed, buf)
     love.graphics.rectangle("fill", x + 20, y, w - 40, 2)
 
     love.graphics.rectangle("fill", x, y, edge_size, edge_size)
-
-        if ed and buf then
-        colors.set_color("text")
-        local color_name, color_value = color_preview.find_color_at_cursor(buf, ed.cursor_line)
-        local debug_text = string.format("Line %d: %s=%s", ed.cursor_line, color_name or "none", color_value or "none")
-        love.graphics.print(debug_text, preview_window.x + 10, preview_window.y + preview_window.height - 40)
-        
-        if picker_active then
-            love.graphics.print("PICKER ACTIVE", preview_window.x + 10, preview_window.y + preview_window.height - 20)
-        else
-            love.graphics.print("PICKER INACTIVE", preview_window.x + 10, preview_window.y + preview_window.height - 20)
-        end
-    end
-
     color_picker.draw()
 end
 

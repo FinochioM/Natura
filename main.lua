@@ -124,6 +124,19 @@ function love.mousepressed(x, y, button, istouch, presses)
         return
     end
     
+    if not welcome.is_showing() then
+        local scrollbar = require("scrollbar")
+        local content_area = {
+            x = 0,
+            y = 40, -- content_start_y
+            w = love.graphics.getWidth(),
+            h = love.graphics.getHeight() - 40
+        }
+        if scrollbar.handle_mouse_pressed(x, y, button, current_editor, current_buffer, content_area) then
+            return
+        end
+    end
+    
     local mouse = require("mouse")
     mouse.handle_press(current_editor, current_buffer, x, y, button)
 end
@@ -132,6 +145,19 @@ function love.mousemoved(x, y, dx, dy, istouch)
     local color_preview = require("color_preview")
     color_preview.handle_mouse_moved(x, y)
     
+    if not welcome.is_showing() then
+        local scrollbar = require("scrollbar")
+        local content_area = {
+            x = 0,
+            y = 40, -- content_start_y
+            w = love.graphics.getWidth(),
+            h = love.graphics.getHeight() - 40
+        }
+        if scrollbar.handle_mouse_moved(x, y, current_editor, current_buffer, content_area) then
+            return
+        end
+    end
+    
     local mouse = require("mouse")
     mouse.handle_drag(current_editor, current_buffer, x, y, dx, dy)
 end
@@ -139,6 +165,11 @@ end
 function love.mousereleased(x, y, button, istouch, presses)
     local color_preview = require("color_preview")
     color_preview.handle_mouse_released(x, y, button)
+    
+    local scrollbar = require("scrollbar")
+    if scrollbar.handle_mouse_released(x, y, button) then
+        return
+    end
     
     local mouse = require("mouse")
     mouse.handle_release(current_editor, current_buffer, x, y, button)
@@ -196,6 +227,9 @@ function love.wheelmoved(x, y)
     elseif y < 0 then
         editor.scroll_down(current_editor, current_buffer, 3)
     end
+    
+    local scrollbar = require("scrollbar")
+    scrollbar.start_fade_out_animation("main_scrollbar")
 end
 
 function love.update(dt)
