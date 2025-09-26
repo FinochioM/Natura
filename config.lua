@@ -19,6 +19,7 @@ local function get_default_config()
         highlight_matching_brackets = false,
         show_paste_effect = true,
         smooth_scrolling = true,
+        scroll_beyond_last_line = true,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",

@@ -132,9 +132,23 @@ function editor.get_visible_line_count()
     return math.floor(available_height / font:getHeight())
 end
 
+function editor.get_max_scroll_line(buf)
+    local config = require("config")
+    local allow_scroll_beyond = config.get("scroll_beyond_last_line")
+    local visible_lines = editor.get_visible_line_count()
+    
+    if allow_scroll_beyond then
+        return #buf.lines
+    else
+        return math.max(1, #buf.lines - visible_lines + 1)
+    end
+end
+
 function editor.update_viewport(ed, buf)
     local visible_lines = editor.get_visible_line_count()
     local current_target = ed.viewport.target_top_line
+    local config = require("config")
+    local allow_scroll_beyond = config.get("scroll_beyond_last_line")
     
     local target_top_line = current_target
     
@@ -145,7 +159,15 @@ function editor.update_viewport(ed, buf)
     end
     
     target_top_line = math.max(1, target_top_line)
-    target_top_line = math.min(target_top_line, math.max(1, #buf.lines - visible_lines + 1))
+    
+    local max_line
+    if allow_scroll_beyond then
+        max_line = #buf.lines
+    else
+        max_line = math.max(1, #buf.lines - visible_lines + 1)
+    end
+    
+    target_top_line = math.min(target_top_line, max_line)
     
     if target_top_line ~= current_target then
         editor.start_smooth_scroll(ed, target_top_line)
@@ -203,7 +225,18 @@ end
 
 function editor.scroll_down(ed, buf, lines)
     lines = lines or 1
-    local max_line = math.max(1, #buf.lines - editor.get_visible_line_count() + 1)
+    local config = require("config")
+    local allow_scroll_beyond = config.get("scroll_beyond_last_line")
+    
+    local visible_lines = editor.get_visible_line_count()
+    local max_line
+    
+    if allow_scroll_beyond then
+        max_line = #buf.lines
+    else
+        max_line = math.max(1, #buf.lines - visible_lines + 1)
+    end
+    
     local new_top_line = math.min(max_line, ed.viewport.top_line + lines)
     
     if new_top_line ~= ed.viewport.top_line then
@@ -316,14 +349,19 @@ function editor.page_down(ed, buf, extend_selection)
     end
     
     local visible_lines = editor.get_visible_line_count()
-    ed.cursor_line = math.min(#buf.lines, ed.cursor_line + visible_lines)
+    local max_line = editor.get_max_scroll_line(buf)
+    local new_top_line = math.min(max_line, ed.viewport.top_line + visible_lines)
+    
+    local cursor_offset = ed.cursor_line - ed.viewport.top_line
+    ed.cursor_line = math.min(#buf.lines, new_top_line + cursor_offset)
     local line = buf.lines[ed.cursor_line]
     ed.cursor_col = math.min(ed.cursor_col, #line)
     
     if extend_selection then
         editor.update_selection(ed)
     end
-    editor.update_viewport(ed, buf)
+    
+    editor.start_smooth_scroll(ed, new_top_line)
 end
 
 return editor

@@ -44,8 +44,8 @@
     disable_file_open_close_animations:                 -
     double_shift_to_search_in_workspace:                -
     strip_trailing_whitespace_on_save:                  -
-    smooth_scrolling:                                   -
-    scroll_beyond_last_line:                            -
+    smooth_scrolling:                                   DONE
+    scroll_beyond_last_line:                            DONE
     line_height_scale_percent:                          -
     max_editor_width:                                   -
     can_cancel_go_to_line:                              -
