@@ -29,8 +29,8 @@
     + The color wheel should move with the color preview window. FIXED.
     + The color wheel can only change the background colour. It cannot change the rest of the colors. It should change the color the cursor is standing on. FIXED.
     + CTRL+Z and CTRL+Y not workin properly. FIXED.
+    + indent_using and tab_size do not seem to be working correctly. FIXED.
     + The cursor_as_block only works if I change it from false to true, not from true to false.
-    + indent_using and tab_size do not seem to be working correctly.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
