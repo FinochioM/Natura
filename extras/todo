@@ -28,16 +28,16 @@
     + If I scroll down in the global config file, the position gets reset to the top after a few seconds. FIXED.
     + The color wheel should move with the color preview window. FIXED.
     + The color wheel can only change the background colour. It cannot change the rest of the colors. It should change the color the cursor is standing on. FIXED.
+    + CTRL+Z and CTRL+Y not workin properly. FIXED.
     + The cursor_as_block only works if I change it from false to true, not from true to false.
-    + CTRL+Z and CTRL+Y not workin properly.
     + indent_using and tab_size do not seem to be working correctly.
 
 # QOL:
     + CTRL+Backspace should delete the entire word. DONE.
     + Color preview with test code when modifying the "colors" section in global file. Color wheel. DONE.
     + Add mouse support. DONE.
+    + Add color and parsing for global config file. DONE.
     + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]. WIP.
     + When i am writing code and I press enter to move to the new line, the cursor should maintain the indentation from the previous line.
-    + Add color and parsing for global config file.
     + Live updates for everything when updated. Like when updating a file.
     + More UI feedback for the user.

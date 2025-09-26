@@ -660,6 +660,7 @@ function actions.tab_or_indent(ed, buf)
     
     local config = require("config")
     local tab_size = config.get("tab_size")
+    local indent_using = config.get("indent_using")
     
     local line = buf.lines[ed.cursor_line]
     local before_cursor = line:sub(1, ed.cursor_col)
@@ -667,13 +668,18 @@ function actions.tab_or_indent(ed, buf)
     if before_cursor:match("^%s*$") then
         actions.indent(ed, buf)
     else
-        local spaces_needed = tab_size - (ed.cursor_col % tab_size)
-        local spaces = string.rep(" ", spaces_needed)
-        
         local undo = require("undo")
-        undo.record_insertion(ed.undo_state, ed.cursor_line, ed.cursor_col, spaces, ed)
         
-        ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, spaces)
+        if indent_using == "tabs" then
+            undo.record_insertion(ed.undo_state, ed.cursor_line, ed.cursor_col, "\t", ed)
+            ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, "\t")
+        else
+            local spaces_needed = tab_size - (ed.cursor_col % tab_size)
+            local spaces = string.rep(" ", spaces_needed)
+            undo.record_insertion(ed.undo_state, ed.cursor_line, ed.cursor_col, spaces, ed)
+            ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, spaces)
+        end
+        
         editor.update_viewport(ed, buf)
     end
 end
