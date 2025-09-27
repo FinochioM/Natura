@@ -26,7 +26,9 @@ function mouse.screen_to_editor_coords(x, y, ed)
     end
     
     local editor_area = get_editor_content_area()
-    if x < editor_area.x or x > editor_area.x + editor_area.width then
+    local gutter_width = get_line_number_gutter_width(current_buffer)
+    
+    if x < editor_area.x + gutter_width or x > editor_area.x + editor_area.width then
         return nil, nil
     end
     

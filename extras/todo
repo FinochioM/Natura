@@ -31,6 +31,7 @@
     + CTRL+Z and CTRL+Y not workin properly. FIXED.
     + indent_using and tab_size do not seem to be working correctly. FIXED.
     + The cursor_as_block only works if I change it from false to true, not from true to false. FIXED.
+    + The cursor_as_block is drawn with empty space in the bottom. It looks like it is not centered.
 
 # Settings to add:
     maximize_on_start:                                  DONE
@@ -48,11 +49,12 @@
     scroll_beyond_last_line:                            DONE
     line_height_scale_percent:                          DONE
     max_editor_width:                                   DONE
-    can_cancel_go_to_line:                              -
+    can_cancel_go_to_line:                              DONE
     copy_whole_line_without_selection:                  -
     editor_history_size:                                -
     line_wrap_is_on_by_default:                         -
-    show_line_numbers:                                  -
+    show_line_numbers:                                  DONE
+    cursor_corner_radius:                               DONE
     show_ruler_at_column:                               -
     colored_titlebar:                                   -
     dark_titlebar:                                      -
@@ -94,10 +96,10 @@
     + Add mouse support. DONE.
     + Add color and parsing for global config file. DONE.
     + Add a scrollbar. DONE.
+    + cursor as block should have rounded edges. DONE.
     + Customization in global config file, like focus, in global config you have [[settings]], [[keymap]] or [[style]]. WIP.
     + When i am writing code and I press enter to move to the new line, the cursor should maintain the indentation from the previous line.
     + Live updates for everything when updated. Like when updating a file.
     + More UI feedback for the user.
     + Zoom in and out.
     + When a panel opens, closed the other panels so only one can be active at a time.
-    + cursor as block should have rounded edges.

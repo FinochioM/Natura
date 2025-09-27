@@ -28,6 +28,9 @@ local function get_default_config()
         scrollbar_fade_out_delay_seconds = 2.0,
         line_height_scale_percent = 120,
         max_editor_width = -1,
+        can_cancel_go_to_line = true,
+        show_line_numbers = false,
+        cursor_corner_radius = 3,
         colors = {
             background = "222222FF",
             background_dark = "000000FF",
@@ -187,6 +190,9 @@ scrollbar_fade_in_sensitivity: 10.0
 scrollbar_fade_out_delay_seconds: 2.0
 line_height_scale_percent: 120
 max_editor_width: -1
+can_cancel_go_to_line: true
+show_line_numbers: false
+cursor_corner_radius: 3
 
 # Keybinds - modify these to customize your shortcuts
 keybinds.ctrl+s: save

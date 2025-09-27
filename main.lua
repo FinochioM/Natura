@@ -215,6 +215,13 @@ function love.keypressed(key)
     cursor_blink_start_time = love.timer.getTime()
     cursor_visible = true
     
+    if current_editor.goto_state.active then
+        local goto_module = require("goto")
+        if goto_module.handle_key(current_editor.goto_state, key, current_editor, current_buffer) then
+            return
+        end
+    end
+    
     if not keymap.handle_key(key, current_editor, current_buffer) then
         print("Unhandled key: " .. key)
     end
@@ -475,26 +482,6 @@ local function draw_search_bar(ed)
     end
     
     love.graphics.print(search_text, bar_x + 5, bar_y + 5)
-end
-
-local function draw_goto_bar(ed)
-    if not ed.goto_state.active then return end
-    
-    local window_width = love.graphics.getWidth()
-    local bar_width = 300
-    local bar_height = 25
-    local bar_x = window_width - bar_width - 10
-    local bar_y = 10
-    
-    love.graphics.setColor(0.2, 0.2, 0.2, 0.9)
-    love.graphics.rectangle("fill", bar_x, bar_y, bar_width, bar_height)
-    
-    love.graphics.setColor(0.5, 0.5, 0.5)
-    love.graphics.rectangle("line", bar_x, bar_y, bar_width, bar_height)
-    
-    love.graphics.setColor(1, 1, 1)
-    local text = "Go to line: " .. ed.goto_state.input
-    love.graphics.print(text, bar_x + 5, bar_y + 5)
 end
 
 function draw_search_highlights(ed, font, line_height, content_start_y, text_start_x)
@@ -874,9 +861,66 @@ function get_editor_content_area()
     end
 end
 
+function get_line_number_gutter_width(buf)
+    local config = require("config")
+    if not config.get("show_line_numbers") then
+        return 0
+    end
+    
+    local font = love.graphics.getFont()
+    local max_line = #buf.lines
+    local max_digits = string.len(tostring(max_line))
+    local digit_width = font:getWidth("0")
+    local padding = 10
+    
+    return max_digits * digit_width + padding
+end
+
 function get_text_start_x()
     local editor_area = get_editor_content_area()
-    return editor_area.content_x
+    local gutter_width = get_line_number_gutter_width(current_buffer)
+    
+    return editor_area.content_x + gutter_width
+end
+
+function draw_line_numbers(ed, buf, font, line_height, content_start_y)
+    local config = require("config")
+    if not config.get("show_line_numbers") then
+        return
+    end
+    
+    local gutter_width = get_line_number_gutter_width(buf)
+    if gutter_width == 0 then return end
+    
+    local colors = require("colors")
+    local editor_area = get_editor_content_area()
+    local gutter_x = editor_area.x
+    
+    colors.set_color("background_dark")
+    love.graphics.rectangle("fill", gutter_x, content_start_y, gutter_width, love.graphics.getHeight() - content_start_y)
+    
+    colors.set_color("text_dim")
+    love.graphics.line(gutter_x + gutter_width - 1, content_start_y, gutter_x + gutter_width - 1, love.graphics.getHeight())
+    
+    colors.set_color("text_dim")
+    local visible_lines = editor.get_visible_line_count()
+    local end_line = math.min(#buf.lines, ed.viewport.top_line + visible_lines - 1)
+    
+    for i = ed.viewport.top_line, end_line do
+        local y = content_start_y + (i - ed.viewport.top_line) * line_height
+        local line_num_text = tostring(i)
+        local text_width = font:getWidth(line_num_text)
+        
+        local x = gutter_x + gutter_width - text_width - 5
+        
+        if i == ed.cursor_line then
+            colors.set_color("text")
+        else
+            colors.set_color("text_dim")
+        end
+        
+        love.graphics.print(line_num_text, x, y)
+    end
 end
 
 function love.draw()    
@@ -922,6 +966,10 @@ function love.draw()
     local line_height = get_scaled_line_height()
     local content_start_y = 40
     local text_start_x = get_text_start_x()
+
+    if not welcome.is_showing() then
+        draw_line_numbers(current_editor, current_buffer, font, line_height, content_start_y)
+    end
     
     draw_search_highlights(current_editor, font, line_height, content_start_y, text_start_x)
     draw_selection_highlight(current_editor, font, line_height, content_start_y, text_start_x)
@@ -956,7 +1004,9 @@ function love.draw()
                 colors.set_color("cursor")
                 if cursor_as_block then
                     local char_width = font:getWidth(" ")
-                    love.graphics.rectangle("fill", cursor_x, cursor_y, char_width, line_height)
+                    local radius = config.get("cursor_corner_radius") or 3
+                    
+                    love.graphics.rectangle("fill", cursor_x, cursor_y, char_width, line_height, radius, radius)
                     
                     local char_under_cursor = string.sub(current_buffer.lines[current_editor.cursor_line], current_editor.cursor_col + 1, current_editor.cursor_col + 1)
                     if char_under_cursor ~= "" then
@@ -970,7 +1020,9 @@ function love.draw()
         end
     end
     draw_search_bar(current_editor)
-    draw_goto_bar(current_editor)
+
+    local goto_module = require("goto")
+    goto_module.draw(current_editor.goto_state)
 
     if not welcome.is_showing() then
         local scrollbar = require("scrollbar")
