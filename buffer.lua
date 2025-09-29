@@ -12,6 +12,18 @@ function buffer.create()
     }
 end
 
+function buffer.create_new_file(buf)
+    buf.lines = {""}
+    buf.filepath = nil
+    buf.dirty = false
+    buf.language = nil
+    buf.last_modified = nil
+    buf.is_new = true
+    
+    local syntax = require("syntax")
+    syntax.invalidate_buffer(buf)
+end
+
 function buffer.get_file_mtime(filepath)
     if not filepath then return 0 end
     
@@ -55,14 +67,12 @@ function buffer.load_file(buf, filepath)
     
     syntax.tokenize_buffer(buf)
     
-    print("Loaded file: " .. filepath .. (buf.language and (" (detected: " .. buf.language .. ")") or ""))
     return true
 end
 
 function buffer.load_file_external(buf, filepath)
     local file = io.open(filepath, "r")
     if not file then
-        print("Could not open file: " .. filepath)
         return false
     end
     
@@ -77,7 +87,6 @@ function buffer.load_file_external(buf, filepath)
     
     syntax.tokenize_buffer(buf)
     
-    print("Loaded: " .. filepath .. (buf.language and (" (detected: " .. buf.language .. ")") or ""))
     return true
 end
 
@@ -133,9 +142,10 @@ function buffer.split_lines(content)
     return lines
 end
 
-function buffer.save_file(buf)
+function buffer.save_file(buf, ed)
     if not buf.filepath then
-        print("No filepath to save to")
+        local save_dialog = require("save_dialog")
+        save_dialog.open(ed.save_dialog, buf)
         return false
     end
     
@@ -143,7 +153,6 @@ function buffer.save_file(buf)
     
     local file = io.open(buf.filepath, "w")
     if not file then
-        print("Could not save file: " .. buf.filepath)
         return false
     end
     
@@ -151,15 +160,14 @@ function buffer.save_file(buf)
     file:close()
     
     buf.dirty = false
+    buf.is_new = false
     buf.last_modified = buffer.get_file_mtime(buf.filepath)
     
     if buf.filepath:match("natura%.config$") then
         local colors = require("colors")
         colors.reload()
-        print("Reloaded colors from config")
     end
     
-    print("Saved: " .. buf.filepath)
     return true
 end
 

@@ -120,6 +120,7 @@ local function get_default_config()
             ["shift+delete"] = "delete_line",
             ["escape"] = "clear_selection",
             ["alt+x"] = "show_actions",
+            ["ctrl+n"] = "create_new_file"
         }
     }
 end
@@ -227,6 +228,7 @@ keybinds.end: line_end
 keybinds.shift+delete: delete_line
 keybinds.escape: clear_selection
 keybinds.alt+x: show_actions
+keybinds.ctrl+n: create_new_file
 
 # Color Theme - modify these hex values (RRGGBBAA format)
 colors.background: 1A1A1AFF

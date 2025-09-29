@@ -12,8 +12,6 @@ function keymap.load_keybinds()
     if not next(current_keybinds) then
         error("FATAL: No keybinds loaded from config!")
     end
-    
-    print("Loaded keybinds from config")
 end
 
 local function get_key_string(key, ctrl, shift, alt)
@@ -29,7 +27,15 @@ end
 
 function keymap.execute_action(action, ed, buf, shift, ctrl, alt)
     if action == "save" then
-        require("buffer").save_file(buf)
+        require("buffer").save_file(buf, ed)
+        return true
+    elseif action == "create_new_file" then
+        local buffer = require("buffer")
+        buffer.create_new_file(buf)
+        ed.cursor_line = 1
+        ed.cursor_col = 0
+        require("editor").clear_selection(ed)
+        require("editor").update_viewport(ed, buf)
         return true
     elseif action == "search" then
         ed.goto_state.active = false 

@@ -18,7 +18,9 @@ local WELCOME_CONTENT = {
 }
 
 function welcome.is_showing()
-    return not (current_buffer and current_buffer.filepath and current_buffer.filepath ~= "")
+    local has_filepath = current_buffer and current_buffer.filepath and current_buffer.filepath ~= ""
+    local is_new_file = current_buffer and current_buffer.is_new
+    return not (has_filepath or is_new_file)
 end
 
 function welcome.draw()

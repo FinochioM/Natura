@@ -184,6 +184,10 @@ function love.textinput(text)
     if current_editor.file_dialog.active then
         local file_dialog = require("file_dialog")
         file_dialog.handle_text(current_editor.file_dialog, text)
+    elseif current_editor.save_dialog.active then
+        local save_dialog = require("save_dialog")
+        save_dialog.handle_text(current_editor.save_dialog, text)
+        return
     elseif current_editor.goto_state.active then
         local goto_module = require("goto")
         goto_module.handle_input(current_editor.goto_state, text)
@@ -218,6 +222,13 @@ function love.keypressed(key)
     if current_editor.goto_state.active then
         local goto_module = require("goto")
         if goto_module.handle_key(current_editor.goto_state, key, current_editor, current_buffer) then
+            return
+        end
+    end
+
+    if current_editor.save_dialog.active then
+        local save_dialog = require("save_dialog")
+        if save_dialog.handle_key(current_editor.save_dialog, key) then
             return
         end
     end
@@ -931,6 +942,9 @@ function love.draw()
                             current_editor.actions_menu.active or
                             current_editor.search.active or
                             current_editor.goto_state.active
+
+    local save_dialog = require("save_dialog")
+    save_dialog.draw(current_editor.save_dialog)
 
     if welcome.is_showing() and not any_dialog_active then
         welcome.draw()

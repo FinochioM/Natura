@@ -22,7 +22,8 @@ function editor.create()
         goto_state = require("goto").create(),
         file_dialog = require("file_dialog").create(),
         actions_menu = require("actions_menu").create(),
-        undo_state = require("undo").create()
+        undo_state = require("undo").create(),
+        save_dialog = require("save_dialog").create()
     }
 end
 

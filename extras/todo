@@ -33,6 +33,9 @@
     + The cursor_as_block only works if I change it from false to true, not from true to false. FIXED.
     + The cursor_as_block is drawn with empty space in the bottom. It looks like it is not centered.
 
+# Keybinds to add:
+    ctrl+n                                              DONE
+
 # Settings to add:
     maximize_on_start:                                  DONE
     open_on_the_biggest_monitor:                        DONE
