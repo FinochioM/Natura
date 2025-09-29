@@ -181,38 +181,51 @@ end
 function love.textinput(text)
     cursor_blink_start_time = love.timer.getTime()
     cursor_visible = true
+    
     if current_editor.file_dialog.active then
         local file_dialog = require("file_dialog")
         file_dialog.handle_text(current_editor.file_dialog, text)
-    elseif current_editor.save_dialog.active then
+        return
+    end
+    
+    if current_editor.save_dialog.active then
         local save_dialog = require("save_dialog")
         save_dialog.handle_text(current_editor.save_dialog, text)
         return
-    elseif current_editor.goto_state.active then
+    end
+    
+    if current_editor.goto_state.active then
         local goto_module = require("goto")
         goto_module.handle_input(current_editor.goto_state, text)
-    elseif current_editor.search.active then
+        return
+    end
+    
+    if current_editor.search.active then
         current_editor.search.query = current_editor.search.query .. text
         search.set_query(current_editor.search, current_editor.search.query, current_buffer)
-    elseif current_editor.actions_menu.active then
+        return
+    end
+    
+    if current_editor.actions_menu.active then
         local actions_menu = require("actions_menu")
         actions_menu.handle_text(current_editor.actions_menu, text)
-    else
-        local undo = require("undo")
-        local actions = require("actions")
-        
-        if editor.has_selection(current_editor) then
-            local selected_text = editor.get_selected_text(current_editor, current_buffer)
-            local bounds = editor.get_selection_bounds(current_editor)
-            undo.record_deletion(current_editor.undo_state, bounds.start_line, bounds.start_col, selected_text, current_editor)
-            actions.delete_selection(current_editor, current_buffer)
-        end
-        
-        undo.record_insertion(current_editor.undo_state, current_editor.cursor_line, current_editor.cursor_col, text, current_editor)
-        
-        current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)
-        editor.update_viewport(current_editor, current_buffer)
+        return
     end
+    
+    local undo = require("undo")
+    local actions = require("actions")
+    
+    if editor.has_selection(current_editor) then
+        local selected_text = editor.get_selected_text(current_editor, current_buffer)
+        local bounds = editor.get_selection_bounds(current_editor)
+        undo.record_deletion(current_editor.undo_state, bounds.start_line, bounds.start_col, selected_text, current_editor)
+        actions.delete_selection(current_editor, current_buffer)
+    end
+    
+    undo.record_insertion(current_editor.undo_state, current_editor.cursor_line, current_editor.cursor_col, text, current_editor)
+    
+    current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)
+    editor.update_viewport(current_editor, current_buffer)
 end
 
 function love.keypressed(key)

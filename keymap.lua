@@ -317,6 +317,10 @@ function keymap.handle_key(key, ed, buf)
     if ed.file_dialog.active then
         return keymap.handle_file_dialog_key(key, ed, buf, shift, ctrl, alt)
     end
+
+    if ed.save_dialog.active then
+        return true
+    end
     
     if ed.search.active then
         return keymap.handle_search_key(key, ed, buf, shift, ctrl, alt)

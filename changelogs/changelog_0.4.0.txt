@@ -1,0 +1,8 @@
+﻿version 0.4.0 - 
+added "can_cancel_go_to_line" to global file.
+added "show_line_numbers" to global file.
+added "cursor_corner_radius" to global file.
+implementing CTRL+N action for new file.
+new file action only works when standing in welcome screen.
+added CTRL+N action.
+made the save file dialog similar to open file dialog.
