@@ -49,9 +49,13 @@ function keymap.execute_action(action, ed, buf, shift, ctrl, alt)
         if current_layout.mode == "single" then
             if not current_left_buffer or not current_left_buffer.lines then
                 local buffer_module = require("buffer")
+                local editor_module = require("editor")
+                
                 current_left_buffer = buffer_module.create()
-                current_left_editor = require("editor").create()
+                current_left_editor = editor_module.create()
                 buffer_module.create_new_file(current_left_buffer)
+                current_left_editor.cursor_line = 1
+                current_left_editor.cursor_col = 0
             end
             
             current_layout.mode = "double"

@@ -180,12 +180,36 @@ function love.mousepressed(x, y, button, istouch, presses)
     
     if not welcome.is_showing() then
         local scrollbar = require("scrollbar")
-        local content_area = {
-            x = 0,
-            y = 40,
-            w = love.graphics.getWidth(),
-            h = love.graphics.getHeight() - 40
-        }
+        
+        local content_area
+        if current_layout.mode == "double" then
+            local layout = require("layout")
+            local bounds = layout.get_editor_bounds(current_layout, love.graphics.getWidth(), love.graphics.getHeight())
+            
+            if clicked_editor == current_left_editor then
+                content_area = {
+                    x = bounds.left.x,
+                    y = 40,
+                    w = bounds.left.width,
+                    h = love.graphics.getHeight() - 40
+                }
+            else
+                content_area = {
+                    x = bounds.right.x,
+                    y = 40,
+                    w = bounds.right.width,
+                    h = love.graphics.getHeight() - 40
+                }
+            end
+        else
+            content_area = {
+                x = 0,
+                y = 40,
+                w = love.graphics.getWidth(),
+                h = love.graphics.getHeight() - 40
+            }
+        end
+        
         if scrollbar.handle_mouse_pressed(x, y, button, current_editor, current_buffer, content_area) then
             return
         end
@@ -1039,6 +1063,7 @@ function love.draw()
     
     color_preview.draw(current_editor, current_buffer)
 end
+
 function draw_editor_content(ed, buf, offset_x, offset_y, width, height)
     local any_dialog_active = ed.file_dialog.active or 
                             ed.actions_menu.active or
