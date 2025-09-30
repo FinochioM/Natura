@@ -980,13 +980,45 @@ function love.draw()
     local bg_color = colors.get("background")
     love.graphics.clear(bg_color[1], bg_color[2], bg_color[3], bg_color[4])
 
-    local any_dialog_active = current_editor.file_dialog.active or 
-                            current_editor.actions_menu.active or
-                            current_editor.search.active or
-                            current_editor.goto_state.active
-
+    if current_layout.mode == "double" and current_right_editor and current_right_buffer then
+        local layout = require("layout")
+        local window_width = love.graphics.getWidth()
+        local window_height = love.graphics.getHeight()
+        local bounds = layout.get_editor_bounds(current_layout, window_width, window_height)
+        
+        love.graphics.push()
+        love.graphics.setScissor(bounds.left.x, bounds.left.y, bounds.left.width, bounds.left.height)
+        draw_editor_content(current_left_editor, current_left_buffer, bounds.left.x, bounds.left.y, bounds.left.width, bounds.left.height)
+        love.graphics.setScissor()
+        love.graphics.pop()
+        
+        love.graphics.push()
+        love.graphics.setScissor(bounds.right.x, bounds.right.y, bounds.right.width, bounds.right.height)
+        draw_editor_content(current_right_editor, current_right_buffer, bounds.right.x, bounds.right.y, bounds.right.width, bounds.right.height)
+        love.graphics.setScissor()
+        love.graphics.pop()
+        
+        layout.draw_divider(current_layout, window_width, window_height)
+    else
+        draw_editor_content(current_editor, current_buffer, 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+    end
+    
     local save_dialog = require("save_dialog")
     save_dialog.draw(current_editor.save_dialog)
+
+    local file_dialog = require("file_dialog")
+    file_dialog.draw(current_editor)
+
+    local actions_menu = require("actions_menu")
+    actions_menu.draw(current_editor.actions_menu)
+    
+    color_preview.draw(current_editor, current_buffer)
+end
+function draw_editor_content(ed, buf, offset_x, offset_y, width, height)
+    local any_dialog_active = ed.file_dialog.active or 
+                            ed.actions_menu.active or
+                            ed.search.active or
+                            ed.goto_state.active
 
     if welcome.is_showing() and not any_dialog_active then
         welcome.draw()
@@ -999,58 +1031,57 @@ function love.draw()
 
     local title = "Natura Editor"
     colors.set_color("text")
-    if current_buffer.filepath then
-        title = title .. " - " .. current_buffer.filepath
-        if current_buffer.dirty then
+    if buf.filepath then
+        title = title .. " - " .. buf.filepath
+        if buf.dirty then
             title = title .. " *"
         end
     end
 
     if not welcome.is_showing() then
-        love.graphics.print(title, 10, 10)
+        love.graphics.print(title, offset_x + 10, 10)
     end
 
     colors.set_color("ui_success")
-
-    local debug_lang = "" .. (current_buffer.language or "None")
+    local debug_lang = "" .. (buf.language or "None")
 
     if not welcome.is_showing() then
-        love.graphics.print(debug_lang, love.graphics.getWidth() - 50, 10)
+        love.graphics.print(debug_lang, offset_x + width - 50, 10)
     end
     
     local font = love.graphics.getFont()
     local line_height = get_scaled_line_height()
     local content_start_y = 40
-    local text_start_x = get_text_start_x()
+    local text_start_x = offset_x + 10
 
     if not welcome.is_showing() then
-        draw_line_numbers(current_editor, current_buffer, font, line_height, content_start_y)
+        draw_line_numbers(ed, buf, font, line_height, content_start_y)
     end
     
-    draw_search_highlights(current_editor, font, line_height, content_start_y, text_start_x)
-    draw_selection_highlight(current_editor, font, line_height, content_start_y, text_start_x)
-    draw_selection_occurrences(current_editor, current_buffer, font, line_height, content_start_y, text_start_x)
-    draw_line_highlight(current_editor, current_buffer, font, line_height, content_start_y, text_start_x)
-    draw_bracket_highlights(current_editor, current_buffer, font, line_height, content_start_y, text_start_x)
-    draw_paste_animations(current_editor, current_buffer, font, line_height, content_start_y, text_start_x)
+    draw_search_highlights(ed, font, line_height, content_start_y, text_start_x)
+    draw_selection_highlight(ed, font, line_height, content_start_y, text_start_x)
+    draw_selection_occurrences(ed, buf, font, line_height, content_start_y, text_start_x)
+    draw_line_highlight(ed, buf, font, line_height, content_start_y, text_start_x)
+    draw_bracket_highlights(ed, buf, font, line_height, content_start_y, text_start_x)
+    draw_paste_animations(ed, buf, font, line_height, content_start_y, text_start_x)
     
     colors.set_color("code_default")
     
     local visible_lines = editor.get_visible_line_count()
-    local end_line = math.min(#current_buffer.lines, current_editor.viewport.top_line + visible_lines - 1)
+    local end_line = math.min(#buf.lines, ed.viewport.top_line + visible_lines - 1)
 
-    for i = current_editor.viewport.top_line, end_line do
-        local line = current_buffer.lines[i]
-        local y = content_start_y + (i - current_editor.viewport.top_line) * line_height
+    for i = ed.viewport.top_line, end_line do
+        local line = buf.lines[i]
+        local y = content_start_y + (i - ed.viewport.top_line) * line_height
         
-        draw_line_with_syntax_highlighting(line, text_start_x, y, i, current_buffer.language)
+        draw_line_with_syntax_highlighting(line, text_start_x, y, i, buf.language)
     end
     
     if not welcome.is_showing() then
-        if current_editor.cursor_line >= current_editor.viewport.top_line and 
-        current_editor.cursor_line <= current_editor.viewport.top_line + visible_lines - 1 then
-            local cursor_y = content_start_y + (current_editor.cursor_line - current_editor.viewport.top_line) * line_height
-            local cursor_text = string.sub(current_buffer.lines[current_editor.cursor_line], 1, current_editor.cursor_col)
+        if ed.cursor_line >= ed.viewport.top_line and 
+        ed.cursor_line <= ed.viewport.top_line + visible_lines - 1 then
+            local cursor_y = content_start_y + (ed.cursor_line - ed.viewport.top_line) * line_height
+            local cursor_text = string.sub(buf.lines[ed.cursor_line], 1, ed.cursor_col)
             local cursor_x = text_start_x + font:getWidth(cursor_text)
             
             if cursor_visible then
@@ -1064,7 +1095,7 @@ function love.draw()
                     
                     love.graphics.rectangle("fill", cursor_x, cursor_y, char_width, line_height, radius, radius)
                     
-                    local char_under_cursor = string.sub(current_buffer.lines[current_editor.cursor_line], current_editor.cursor_col + 1, current_editor.cursor_col + 1)
+                    local char_under_cursor = string.sub(buf.lines[ed.cursor_line], ed.cursor_col + 1, ed.cursor_col + 1)
                     if char_under_cursor ~= "" then
                         colors.set_color("background")
                         love.graphics.print(char_under_cursor, cursor_x, cursor_y)
@@ -1075,45 +1106,38 @@ function love.draw()
             end
         end
     end
-    draw_search_bar(current_editor)
+    
+    draw_search_bar(ed)
 
     local goto_module = require("goto")
-    goto_module.draw(current_editor.goto_state)
+    goto_module.draw(ed.goto_state)
 
     if not welcome.is_showing() then
         local scrollbar = require("scrollbar")
         local content_area = {
-            x = 0,
+            x = offset_x,
             y = content_start_y,
-            w = love.graphics.getWidth(),
-            h = love.graphics.getHeight() - content_start_y
+            w = width,
+            h = height - content_start_y
         }
-        scrollbar.draw(current_editor, current_buffer, content_area)
+        scrollbar.draw(ed, buf, content_area)
     end
-
-    local file_dialog = require("file_dialog")
-    file_dialog.draw(current_editor)
-
-    local actions_menu = require("actions_menu")
-    actions_menu.draw(current_editor.actions_menu)
-    
-    color_preview.draw(current_editor, current_buffer)
     
     colors.set_color("text_dim")
 
     if not welcome.is_showing() then
         local debug_text = string.format("Line %d/%d (showing %d-%d)", 
-            current_editor.cursor_line, #current_buffer.lines,
-            current_editor.viewport.top_line, end_line)
+            ed.cursor_line, #buf.lines,
+            ed.viewport.top_line, end_line)
         
-        if editor.has_selection(current_editor) then
+        if editor.has_selection(ed) then
             debug_text = debug_text .. " [SELECTION]"
         end
         
-        if current_editor.search.active then
+        if ed.search.active then
             debug_text = debug_text .. " [SEARCH]"
         end
-        love.graphics.print(debug_text, 10, love.graphics.getHeight() - 20)
+        love.graphics.print(debug_text, offset_x + 10, love.graphics.getHeight() - 20)
     end
 end
 
