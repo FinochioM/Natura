@@ -38,6 +38,7 @@
 
 # Keybinds to add:
     ctrl+n                                              DONE
+    ctrl+shift+n                                        -
 
 # Settings to add:
     maximize_on_start:                                  DONE

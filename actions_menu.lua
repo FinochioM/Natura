@@ -32,6 +32,18 @@ function actions_menu.get_available_actions()
                     print("Global config file not found: " .. config_path)
                 end
             end
+        },
+        {
+            name = "New File",
+            description = "Create a new empty file",
+            action = function(editor, buffer)
+                local buffer_module = require("buffer")
+                buffer_module.create_new_file(buffer)
+                editor.cursor_line = 1
+                editor.cursor_col = 0
+                require("editor").clear_selection(editor)
+                require("editor").update_viewport(editor, buffer)
+            end
         }
     }
 end

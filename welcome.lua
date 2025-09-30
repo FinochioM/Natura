@@ -9,7 +9,7 @@ local WELCOME_CONTENT = {
     commands = {
         {"Alt+X", " Open Actions Menu"},
         {"Ctrl+O", "Open File"},
-        {"Ctrl+G", "Go to Line"},
+        {"Ctrl+N", "New File"},
         {"Ctrl+S", "Save"},
         {"Ctrl+Z", "Undo"},
         {"Ctrl+Y", "Redo"},
