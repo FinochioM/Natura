@@ -146,17 +146,43 @@ function love.filedropped(file)
     end
 end
 
+local function get_editor_at_position(x, y)
+    if current_layout.mode == "single" then
+        return current_editor, current_buffer
+    end
+    
+    local layout = require("layout")
+    local bounds = layout.get_editor_bounds(current_layout, love.graphics.getWidth(), love.graphics.getHeight())
+    
+    if x >= bounds.left.x and x < bounds.left.x + bounds.left.width then
+        return current_left_editor, current_left_buffer
+    elseif bounds.right and x >= bounds.right.x and x < bounds.right.x + bounds.right.width then
+        return current_right_editor, current_right_buffer
+    end
+    
+    return current_editor, current_buffer
+end
+
 function love.mousepressed(x, y, button, istouch, presses)
     local color_preview = require("color_preview")
     if color_preview.handle_mouse_pressed(x, y, button) then
         return
     end
     
+    local clicked_editor, clicked_buffer = get_editor_at_position(x, y)
+    if clicked_editor ~= current_editor then
+        current_editor = clicked_editor
+        current_buffer = clicked_buffer
+        if current_layout.mode == "double" then
+            current_layout.active_side = (clicked_editor == current_left_editor) and "left" or "right"
+        end
+    end
+    
     if not welcome.is_showing() then
         local scrollbar = require("scrollbar")
         local content_area = {
             x = 0,
-            y = 40, -- content_start_y
+            y = 40,
             w = love.graphics.getWidth(),
             h = love.graphics.getHeight() - 40
         }
@@ -593,14 +619,14 @@ function draw_selection_highlight(ed, font, line_height, content_start_y, text_s
     end
 end
 
-function draw_line_with_syntax_highlighting(line, x, y, line_num, language)
+function draw_line_with_syntax_highlighting(line, x, y, line_num, language, buf)
     if not language then
         colors.set_color("code_default")
         love.graphics.print(line, x, y)
         return
     end
     
-    local tokens = syntax.get_line_tokens(current_buffer, line_num)
+    local tokens = syntax.get_line_tokens(buf, line_num)
     
     if #tokens == 0 then
         colors.set_color("code_default") 
@@ -1072,8 +1098,8 @@ function draw_editor_content(ed, buf, offset_x, offset_y, width, height)
     for i = ed.viewport.top_line, end_line do
         local line = buf.lines[i]
         local y = content_start_y + (i - ed.viewport.top_line) * line_height
-        
-        draw_line_with_syntax_highlighting(line, text_start_x, y, i, buf.language)
+
+        draw_line_with_syntax_highlighting(line, text_start_x, y, i, buf.language, buf)
     end
         
     if not welcome.is_showing() then

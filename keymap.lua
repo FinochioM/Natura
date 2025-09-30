@@ -46,17 +46,28 @@ function keymap.execute_action(action, ed, buf, shift, ctrl, alt)
         end
         return true
     elseif action == "create_new_file_on_the_side" then
-        local layout = require("layout")
-        local buffer = require("buffer")
-        
         if current_layout.mode == "single" then
+            if not current_left_buffer or not current_left_buffer.lines then
+                local buffer_module = require("buffer")
+                current_left_buffer = buffer_module.create()
+                current_left_editor = require("editor").create()
+                buffer_module.create_new_file(current_left_buffer)
+            end
+            
             current_layout.mode = "double"
             current_layout.active_side = "right"
-            current_right_editor = require("editor").create()
-            current_right_buffer = buffer.create()
-            buffer.create_new_file(current_right_buffer)
+            
+            local editor_module = require("editor")
+            local buffer_module = require("buffer")
+            
+            current_right_editor = editor_module.create()
+            current_right_buffer = buffer_module.create()
+            buffer_module.create_new_file(current_right_buffer)
             current_right_editor.cursor_line = 1
             current_right_editor.cursor_col = 0
+            
+            current_editor = current_right_editor
+            current_buffer = current_right_buffer
         end
         return true
     elseif action == "switch_editor" then
