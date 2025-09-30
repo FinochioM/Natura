@@ -9,6 +9,12 @@ local syntax = require("syntax")
 local color_preview = require("color_preview")
 local welcome = require("welcome")
 
+current_left_editor = nil
+current_left_buffer = nil
+current_right_editor = nil
+current_right_buffer = nil
+current_layout = nil
+
 local current_buffer
 local current_editor
 
@@ -21,6 +27,18 @@ local CURSOR_BLINK_SPEED = 0.5
 
 local paste_animations = {}
 local PASTE_ANIMATION_SPEED = 1.0
+
+local function get_active_editor_buffer()
+    if current_layout.mode == "single" then
+        return current_left_editor, current_left_buffer
+    else
+        if current_layout.active_side == "left" then
+            return current_left_editor, current_left_buffer
+        else
+            return current_right_editor, current_right_buffer
+        end
+    end
+end
 
 function love.load(args)
     local config = require("config")
@@ -87,27 +105,35 @@ function love.load(args)
     end
     
     love.keyboard.setKeyRepeat(true)
-    
-    current_buffer = buffer.create()
-    current_editor = editor.create()
+
+    local layout = require("layout")
+    current_layout = layout.create()
+
+    local editor = require("editor")
+    local buffer = require("buffer")
+
+    current_left_editor = editor.create()
+    current_left_buffer = buffer.create()
+
+    current_right_editor = nil
+    current_right_buffer = nil
+
+    current_buffer = current_left_buffer
+    current_editor = current_left_editor
 
     _G.current_buffer = current_buffer
-    
+
     if args and args[1] then
         local filepath = args[1]
         if love.filesystem.getInfo(filepath) then
-            buffer.load_file(current_buffer, filepath)
+            buffer.load_file(current_left_buffer, filepath)
         else
             local filename = filepath:match("([^/\\]+)$") or filepath
             if love.filesystem.getInfo(filename) then
-                buffer.load_file(current_buffer, filename)
-            else
-                print("Could not find file: " .. filepath)
+                buffer.load_file(current_left_buffer, filename)
             end
         end
     end
-    
-    print("Natura Editor starting...")
 end
 
 function love.filedropped(file)
@@ -179,87 +205,90 @@ function love.mousereleased(x, y, button, istouch, presses)
 end
 
 function love.textinput(text)
+    local ed, buf = get_active_editor_buffer()
     cursor_blink_start_time = love.timer.getTime()
     cursor_visible = true
-    
-    if current_editor.file_dialog.active then
+
+    if ed.file_dialog.active then
         local file_dialog = require("file_dialog")
-        file_dialog.handle_text(current_editor.file_dialog, text)
+        file_dialog.handle_text(ed.file_dialog, text)
         return
     end
-    
-    if current_editor.save_dialog.active then
+
+    if ed.save_dialog.active then
         local save_dialog = require("save_dialog")
-        save_dialog.handle_text(current_editor.save_dialog, text)
+        save_dialog.handle_text(ed.save_dialog, text)
         return
     end
-    
-    if current_editor.goto_state.active then
+
+    if ed.goto_state.active then
         local goto_module = require("goto")
-        goto_module.handle_input(current_editor.goto_state, text)
+        goto_module.handle_input(ed.goto_state, text)
         return
     end
-    
-    if current_editor.search.active then
-        current_editor.search.query = current_editor.search.query .. text
-        search.set_query(current_editor.search, current_editor.search.query, current_buffer)
+
+    if ed.search.active then
+        ed.search.query = ed.search.query .. text
+        search.set_query(ed.search, ed.search.query, buf)
         return
     end
-    
-    if current_editor.actions_menu.active then
+
+    if ed.actions_menu.active then
         local actions_menu = require("actions_menu")
-        actions_menu.handle_text(current_editor.actions_menu, text)
+        actions_menu.handle_text(ed.actions_menu, text)
         return
     end
     
     local undo = require("undo")
     local actions = require("actions")
     
-    if editor.has_selection(current_editor) then
-        local selected_text = editor.get_selected_text(current_editor, current_buffer)
-        local bounds = editor.get_selection_bounds(current_editor)
-        undo.record_deletion(current_editor.undo_state, bounds.start_line, bounds.start_col, selected_text, current_editor)
-        actions.delete_selection(current_editor, current_buffer)
+    if editor.has_selection(ed) then
+        local selected_text = editor.get_selected_text(ed, buf)
+        local bounds = editor.get_selection_bounds(ed)
+        undo.record_deletion(ed.undo_state, bounds.start_line, bounds.start_col, selected_text, ed)
+        actions.delete_selection(ed, buf)
     end
-    
-    undo.record_insertion(current_editor.undo_state, current_editor.cursor_line, current_editor.cursor_col, text, current_editor)
-    
-    current_editor.cursor_col = buffer.insert_text(current_buffer, current_editor.cursor_line, current_editor.cursor_col, text)
-    editor.update_viewport(current_editor, current_buffer)
+
+    undo.record_insertion(ed.undo_state, ed.cursor_line, ed.cursor_col, text, ed)
+
+    ed.cursor_col = buffer.insert_text(buf, ed.cursor_line, ed.cursor_col, text)
+    editor.update_viewport(ed, buf)
 end
 
 function love.keypressed(key)
+    local ed, buf = get_active_editor_buffer()
     cursor_blink_start_time = love.timer.getTime()
     cursor_visible = true
-    
-    if current_editor.goto_state.active then
+
+    if ed.goto_state.active then
         local goto_module = require("goto")
-        if goto_module.handle_key(current_editor.goto_state, key, current_editor, current_buffer) then
+        if goto_module.handle_key(ed.goto_state, key, ed, buf) then
             return
         end
     end
 
-    if current_editor.save_dialog.active then
+    if ed.save_dialog.active then
         local save_dialog = require("save_dialog")
-        if save_dialog.handle_key(current_editor.save_dialog, key) then
+        if save_dialog.handle_key(ed.save_dialog, key) then
             return
         end
-    end
-    
-    if not keymap.handle_key(key, current_editor, current_buffer) then
-        print("Unhandled key: " .. key)
     end
 
     if color_preview.handle_key(key) then
         return
     end
+    
+    if not keymap.handle_key(key, ed, buf) then
+        print("Unhandled key: " .. key)
+    end
 end
 
 function love.wheelmoved(x, y)
+    local ed, buf = get_active_editor_buffer()
     if y > 0 then
-        editor.scroll_up(current_editor, current_buffer, 3)
+        editor.scroll_up(ed, buf, 3)
     elseif y < 0 then
-        editor.scroll_down(current_editor, current_buffer, 3)
+        editor.scroll_down(ed, buf, 3)
     end
     
     local scrollbar = require("scrollbar")
@@ -950,7 +979,7 @@ end
 function love.draw()    
     local bg_color = colors.get("background")
     love.graphics.clear(bg_color[1], bg_color[2], bg_color[3], bg_color[4])
-    
+
     local any_dialog_active = current_editor.file_dialog.active or 
                             current_editor.actions_menu.active or
                             current_editor.search.active or

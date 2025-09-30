@@ -45,6 +45,20 @@ function keymap.execute_action(action, ed, buf, shift, ctrl, alt)
             search.set_query(ed.search, ed.search.query, buf)
         end
         return true
+    elseif action == "create_new_file_on_the_side" then
+        local layout = require("layout")
+        local buffer = require("buffer")
+        
+        if current_layout.mode == "single" then
+            current_layout.mode = "double"
+            current_layout.active_side = "right"
+            current_right_editor = require("editor").create()
+            current_right_buffer = buffer.create()
+            buffer.create_new_file(current_right_buffer)
+            current_right_editor.cursor_line = 1
+            current_right_editor.cursor_col = 0
+        end
+        return true
     elseif action == "show_actions" then
         local actions_menu = require("actions_menu")
         actions_menu.toggle(ed.actions_menu)
