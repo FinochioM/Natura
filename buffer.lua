@@ -159,9 +159,20 @@ function buffer.save_file(buf, ed)
     file:write(content)
     file:close()
     
+    local was_new = buf.is_new
     buf.dirty = false
     buf.is_new = false
     buf.last_modified = buffer.get_file_mtime(buf.filepath)
+    
+    if was_new then
+        local extension = buf.filepath:match("%.([^./\\]+)$")
+        if extension then
+            buf.language = langs.get_language_from_extension("." .. extension)
+            if buf.language then
+                syntax.tokenize_buffer(buf)
+            end
+        end
+    end
     
     if buf.filepath:match("natura%.config$") then
         local colors = require("colors")

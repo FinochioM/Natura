@@ -25,7 +25,7 @@ end
 function save_dialog.open(dialog, buffer)
     dialog.active = true
     dialog.pending_buffer = buffer
-    dialog.input = "untitled.txt"
+    dialog.input = ""
     save_dialog.scan_directory(dialog)
 end
 
@@ -166,7 +166,6 @@ function save_dialog.execute_save(dialog)
     end
     
     dialog.pending_buffer.filepath = full_path
-    dialog.pending_buffer.is_new = false
     
     local buffer = require("buffer")
     local ed = _G.current_editor
@@ -183,14 +182,16 @@ function save_dialog.handle_text(dialog, text)
 end
 
 function save_dialog.handle_key(dialog, key)
-    if key == "up" and dialog.selected_index > 1 then
+    if key == "escape" then
+        save_dialog.close(dialog)
+        return true
+    elseif key == "up" and dialog.selected_index > 1 then
         dialog.selected_index = dialog.selected_index - 1
         return true
     elseif key == "down" and dialog.selected_index < #dialog.files then
         dialog.selected_index = dialog.selected_index + 1
         return true
     elseif key == "return" then
-        -- If a directory is selected, navigate into it
         if dialog.selected_index > 0 and dialog.selected_index <= #dialog.files then
             local item = dialog.files[dialog.selected_index]
             if item.type == "directory" or item.type == "drive" then
@@ -198,7 +199,6 @@ function save_dialog.handle_key(dialog, key)
                 return true
             end
         end
-        -- Otherwise, save with the input as filename
         save_dialog.execute_save(dialog)
         return true
     elseif key == "backspace" then

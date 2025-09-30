@@ -31,7 +31,10 @@
     + CTRL+Z and CTRL+Y not workin properly. FIXED.
     + indent_using and tab_size do not seem to be working correctly. FIXED.
     + The cursor_as_block only works if I change it from false to true, not from true to false. FIXED.
+    + When the save_file dialog is open, it cannot be closed with ESCAPE. FIXED.
+    + When I create a new file and I save it, the syntax highlight does not work until I either restart the editor or I re open the file with the CTRL+O command. FIXED.
     + The cursor_as_block is drawn with empty space in the bottom. It looks like it is not centered.
+
 
 # Keybinds to add:
     ctrl+n                                              DONE
