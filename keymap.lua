@@ -59,6 +59,19 @@ function keymap.execute_action(action, ed, buf, shift, ctrl, alt)
             current_right_editor.cursor_col = 0
         end
         return true
+    elseif action == "switch_editor" then
+        if current_layout.mode == "double" then
+            if current_layout.active_side == "left" then
+                current_layout.active_side = "right"
+                current_editor = current_right_editor
+                current_buffer = current_right_buffer
+            else
+                current_layout.active_side = "left"
+                current_editor = current_left_editor
+                current_buffer = current_left_buffer
+            end
+        end
+        return true
     elseif action == "show_actions" then
         local actions_menu = require("actions_menu")
         actions_menu.toggle(ed.actions_menu)

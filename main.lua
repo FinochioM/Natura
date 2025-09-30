@@ -14,9 +14,8 @@ current_left_buffer = nil
 current_right_editor = nil
 current_right_buffer = nil
 current_layout = nil
-
-local current_buffer
-local current_editor
+current_buffer = nil
+current_editor = nil
 
 local file_check_timer = 0
 local file_check_interval = 1.0
@@ -1076,7 +1075,7 @@ function draw_editor_content(ed, buf, offset_x, offset_y, width, height)
         
         draw_line_with_syntax_highlighting(line, text_start_x, y, i, buf.language)
     end
-    
+        
     if not welcome.is_showing() then
         if ed.cursor_line >= ed.viewport.top_line and 
         ed.cursor_line <= ed.viewport.top_line + visible_lines - 1 then
@@ -1084,7 +1083,7 @@ function draw_editor_content(ed, buf, offset_x, offset_y, width, height)
             local cursor_text = string.sub(buf.lines[ed.cursor_line], 1, ed.cursor_col)
             local cursor_x = text_start_x + font:getWidth(cursor_text)
             
-            if cursor_visible then
+            if cursor_visible and ed == current_editor then
                 local config = require("config")
                 local cursor_as_block = config.get("cursor_as_block")
                 

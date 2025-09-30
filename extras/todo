@@ -33,6 +33,10 @@
     + The cursor_as_block only works if I change it from false to true, not from true to false. FIXED.
     + When the save_file dialog is open, it cannot be closed with ESCAPE. FIXED.
     + When I create a new file and I save it, the syntax highlight does not work until I either restart the editor or I re open the file with the CTRL+O command. FIXED.
+    + When I have 2 editors open, the mouse only works in the currently active editor.
+    + When I have 2 editors open, the scrollbar draws correctly in each editor, but its mouse detection logic doesnt adapt.
+    + If I use the CTRL+SHIFT+N action without any files open, it tries to divide the editor in two and breaks.
+    + When I have 2 editors open, the syntax highlighting logic only works on the currently active editor, the other one breaks.
     + The cursor_as_block is drawn with empty space in the bottom. It looks like it is not centered.
 
 
