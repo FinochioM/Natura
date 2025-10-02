@@ -46,6 +46,18 @@ function keymap.execute_action(action, ed, buf, shift, ctrl, alt)
         end
         return true
     elseif action == "create_new_file_on_the_side" then
+        local welcome = require("welcome")
+        
+        if welcome.is_showing() then
+            local buffer_module = require("buffer")
+            buffer_module.create_new_file(buf)
+            ed.cursor_line = 1
+            ed.cursor_col = 0
+            require("editor").clear_selection(ed)
+            require("editor").update_viewport(ed, buf)
+            return true
+        end
+        
         if current_layout.mode == "single" then
             if not current_left_buffer or not current_left_buffer.lines then
                 local buffer_module = require("buffer")

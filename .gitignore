@@ -1,3 +1,4 @@
 dist/
 extras/commit.bat
 extras/VERSION
+extras/*.lua
