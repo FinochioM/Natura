@@ -59,9 +59,32 @@ end
 
 function file_dialog.scan_directory(dialog)
     dialog.all_files = {}
+
+    local project = require("project")
+    
+    if project.is_loaded() and dialog.current_dir == file_dialog.get_initial_dir() then
+        local proj = project.get_current()
+        for _, workspace_dir in ipairs(proj.workspace_dirs) do
+            if lfs.attributes(workspace_dir) then
+                local dir_name = workspace_dir:match("([^\\/]+)$") or workspace_dir
+                table.insert(dialog.all_files, {
+                    name = dir_name,
+                    full_path = workspace_dir,
+                    type = "workspace_dir"
+                })
+            end
+        end
+        
+        if #proj.workspace_dirs > 0 then
+            table.insert(dialog.all_files, {name = "--- Drives ---", type = "separator"})
+        end
+    end
     
     if love.system.getOS() == "Windows" and dialog.current_dir == "" then
-        dialog.all_files = file_dialog.get_drives()
+        local drives = file_dialog.get_drives()
+        for _, drive in ipairs(drives) do
+            table.insert(dialog.all_files, drive)
+        end
         dialog.input = ""
         file_dialog.filter_files(dialog)
         return
@@ -153,8 +176,15 @@ function file_dialog.select_item(dialog, editor, buffer)
     end
     
     local item = dialog.files[dialog.selected_index]
-    
-    if item.type == "drive" then
+
+    if item.type == "separator" then
+        return true
+    elseif item.type == "workspace_dir" then
+        dialog.current_dir = item.full_path
+        file_dialog.scan_directory(dialog)
+        dialog.selected_index = 1
+        return true
+    elseif item.type == "drive" then
         dialog.current_dir = item.name .. "\\"
         file_dialog.scan_directory(dialog)
         dialog.selected_index = 1
@@ -263,6 +293,9 @@ function file_dialog.draw(ed)
         if file.type == "directory" or file.type == "drive" then
             colors.set_color("ui_success")
             love.graphics.print("[" .. file.name .. "]", dialog_x + 10, y)
+        elseif file.type == "separator" then
+            colors.set_color("ui_dim")
+            love.graphics.print(file.name, dialog_x + 10, y)
         elseif file.type == "error" then
             colors.set_color("ui_error")
             love.graphics.print(file.name, dialog_x + 10, y)
