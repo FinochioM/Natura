@@ -336,6 +336,11 @@ function love.keypressed(key)
         end
     end
 
+    local project_dialog = require("project_dialog")
+    if project_dialog.is_active() then
+        return project_dialog.handle_key(key)
+    end
+
     if color_preview.handle_key(key) then
         return
     end
@@ -1073,6 +1078,9 @@ function love.draw()
 
     local actions_menu = require("actions_menu")
     actions_menu.draw(current_editor.actions_menu)
+
+    local project_dialog = require("project_dialog")
+    project_dialog.draw()
     
     color_preview.draw(current_editor, current_buffer)
 end

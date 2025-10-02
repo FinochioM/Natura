@@ -1,6 +1,6 @@
 [16]
 [[workspace]]
-A:/your/project/path
+A:/Desarrollos/RobloxProjects
 
 [ignore]
 .git/**
@@ -9,6 +9,6 @@ A:/your/project/path
 [file associations]
 
 [[build commands]]
-build_working_dir: A:/your/project/path
+build_working_dir: A:/Desarrollos/RobloxProjects
 open_panel_on_build: true
 clear_build_output_before_running: true

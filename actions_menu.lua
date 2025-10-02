@@ -34,6 +34,14 @@ function actions_menu.get_available_actions()
             end
         },
         {
+            name = "Switch To Project",
+            description = "Open a project from the projects directory",
+            action = function(editor, buffer)
+                local project_dialog = require("project_dialog")
+                project_dialog.toggle(editor)
+            end
+        },
+        {
             name = "New File",
             description = "Create a new empty file",
             action = function(editor, buffer)
