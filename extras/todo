@@ -8,6 +8,7 @@
 # Undo errors:
     + When pressing CTRL+Z, the program crashes. (only after having typed some text before AND not having the text selected) FIXED.
     + CTRL+Y doesnt seem to do anything. Only works when the text is selected. FIXED.
+    + CTRL+Z and CTRL+Y not workin properly again.
 
 # Errors:
     + When reaching an ASCII character, it seems like CTRL+Arrow shortcuts do not work. From left to right. FIXED.
@@ -28,7 +29,6 @@
     + If I scroll down in the global config file, the position gets reset to the top after a few seconds. FIXED.
     + The color wheel should move with the color preview window. FIXED.
     + The color wheel can only change the background colour. It cannot change the rest of the colors. It should change the color the cursor is standing on. FIXED.
-    + CTRL+Z and CTRL+Y not workin properly. FIXED.
     + indent_using and tab_size do not seem to be working correctly. FIXED.
     + The cursor_as_block only works if I change it from false to true, not from true to false. FIXED.
     + When the save_file dialog is open, it cannot be closed with ESCAPE. FIXED.
@@ -39,13 +39,16 @@
     + When I have 2 editors open, the syntax highlighting logic only works on the currently active editor, the other one breaks. FIXED.
     + The cursor_as_block is drawn with empty space in the bottom. It looks like it is not centered.
 
+# Project system
+
 
 # Keybinds to add:
     ctrl+n                                              DONE
     ctrl+shift+n                                        DONE
     ctrl+,                                              DONE
+    ctrl+w                                              DONE
     ctrl+shift+,                                        -
-    ctrl+w                                              -
+    ctrl+p                                              -
 
 # Settings to add:
     maximize_on_start:                                  DONE

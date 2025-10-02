@@ -1,0 +1,14 @@
+[16]
+[[workspace]]
+A:/your/project/path
+
+[ignore]
+.git/**
+*.exe
+
+[file associations]
+
+[[build commands]]
+build_working_dir: A:/your/project/path
+open_panel_on_build: true
+clear_build_output_before_running: true

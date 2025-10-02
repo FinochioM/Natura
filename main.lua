@@ -8,6 +8,7 @@ local colors = require("colors")
 local syntax = require("syntax")
 local color_preview = require("color_preview")
 local welcome = require("welcome")
+local project = require("project")
 
 current_left_editor = nil
 current_left_buffer = nil
@@ -45,6 +46,18 @@ function love.load(args)
 
     local version = require("version")
     version.load()
+
+    local lfs = require("lfs")
+    if not lfs.attributes("projects") then
+        lfs.mkdir("projects")
+        print("Created projects directory")
+    end
+    
+    if args and args[1] and args[1]:match("%.natura%-project$") then
+        project.load(args[1])
+    elseif lfs.attributes(".natura-project") then
+        project.load(".natura-project")
+    end
 
     local font_name = config.get("font")
     local font_size = config.get("font_size") or 14

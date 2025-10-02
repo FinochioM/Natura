@@ -1,0 +1,9 @@
+﻿version 0.5.0 - 
+fixed some bugs in the new file command.
+added new file command to the actions menu.
+added new file on the side command.
+rewrote the draw function with a new approach.
+added switch to other editor command.
+fixed bugs on switch to other editor command.
+fixed more bugs in new file on the side command.
+added close file command.
