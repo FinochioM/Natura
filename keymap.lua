@@ -99,6 +99,39 @@ function keymap.execute_action(action, ed, buf, shift, ctrl, alt)
             end
         end
         return true
+
+    elseif action == "close_file" then
+        if current_layout.mode == "double" then
+            if current_layout.active_side == "left" then
+                current_layout.mode = "single"
+                current_editor = current_right_editor
+                current_buffer = current_right_buffer
+                current_left_editor = current_right_editor
+                current_left_buffer = current_right_buffer
+                current_right_editor = nil
+                current_right_buffer = nil
+                current_layout.active_side = "left"
+            else
+                current_layout.mode = "single"
+                current_editor = current_left_editor
+                current_buffer = current_left_buffer
+                current_right_editor = nil
+                current_right_buffer = nil
+                current_layout.active_side = "left"
+            end
+        else
+            local buffer_module = require("buffer")
+            buf = buffer_module.create()
+            
+            current_buffer = buf
+            current_left_buffer = buf
+            
+            ed.cursor_line = 1
+            ed.cursor_col = 0
+            require("editor").clear_selection(ed)
+            require("editor").update_viewport(ed, buf)
+        end
+        return true
     elseif action == "show_actions" then
         local actions_menu = require("actions_menu")
         actions_menu.toggle(ed.actions_menu)

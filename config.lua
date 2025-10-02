@@ -122,7 +122,8 @@ local function get_default_config()
             ["alt+x"] = "show_actions",
             ["ctrl+n"] = "create_new_file",
             ["ctrl+shift+n"] = "create_new_file_on_the_side",
-            ["ctrl+,"] = "switch_editor"
+            ["ctrl+,"] = "switch_editor",
+            ["ctrl+w"] = "close_file"
         }
     }
 end
@@ -233,6 +234,7 @@ keybinds.alt+x: show_actions
 keybinds.ctrl+n: create_new_file
 keybinds.ctrl+shift+n: create_new_file_on_the_side
 keybinds.ctrl+,: switch_editor
+keybinds.ctrl+w: close_file
 
 # Color Theme - modify these hex values (RRGGBBAA format)
 colors.background: 1A1A1AFF
