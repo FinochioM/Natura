@@ -102,11 +102,17 @@ function file_dialog.scan_directory(dialog)
                     full_path = dialog.current_dir .. "\\" .. entry
                 end
                 
+                if project.should_ignore(full_path, entry) then
+                    goto continue
+                end
+                
                 local attr = lfs.attributes(full_path)
                 if attr then
                     local item = {name = entry, type = attr.mode}
                     table.insert(dialog.all_files, item)
                 end
+                
+                ::continue::
             end
         end
     end)

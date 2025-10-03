@@ -91,6 +91,11 @@ local function parse_project_file(filepath)
             table.insert(project_data.build_commands, current_build_command)
             goto continue
         end
+
+        if current_section == "ignore" then
+            table.insert(project_data.ignore_patterns, line)
+            goto continue
+        end
         
         local key, value = line:match("^([^:]+):%s*(.*)$")
         if key and value then
@@ -173,6 +178,32 @@ end
 
 function project.is_loaded()
     return current_project.loaded
+end
+
+function project.should_ignore(path, name)
+    if not current_project.loaded then
+        return false
+    end
+    
+    for _, pattern in ipairs(current_project.ignore_patterns) do
+        if pattern:match("%*%*") then
+            local regex_pattern = "^" .. pattern:gsub("%*%*", ".*"):gsub("%*", "[^/\\]*"):gsub("%.", "%%."):gsub("%?", ".") .. "$"
+            if path:match(regex_pattern) then
+                return true
+            end
+        elseif pattern:match("%*") then
+            local regex_pattern = "^" .. pattern:gsub("%*", "[^/\\]*"):gsub("%.", "%%."):gsub("%?", ".") .. "$"
+            if name:match(regex_pattern) then
+                return true
+            end
+        else
+            if name == pattern or path:match(pattern) then
+                return true
+            end
+        end
+    end
+    
+    return false
 end
 
 function project.close()

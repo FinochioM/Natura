@@ -4,6 +4,7 @@ A:/Desarrollos/RobloxProjects
 
 [ignore]
 .git/**
+.gitignore
 *.exe
 
 [file associations]
