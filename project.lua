@@ -111,9 +111,14 @@ local function parse_project_file(filepath)
                     table.insert(project_data.ignore_patterns, value)
                 end
             elseif current_section == "file_associations" then
-                local pattern, lang = value:match("^(.+)%s*:%s*(.+)$")
-                if pattern and lang then
-                    table.insert(project_data.file_associations, {pattern = trim(pattern), lang = trim(lang)})
+                patterns_str = trim(key)
+                lang = trim(value)
+                
+                for pattern in patterns_str:gmatch("%S+") do
+                    table.insert(project_data.file_associations, {
+                        pattern = trim(pattern),
+                        lang = lang
+                    })
                 end
             elseif current_section == "build_defaults" then
                 if key == "build_working_dir" then
