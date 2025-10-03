@@ -206,6 +206,29 @@ function project.should_ignore(path, name)
     return false
 end
 
+function project.get_language_for_file(filename)
+    if not current_project.loaded then
+        return nil
+    end
+    
+    for _, assoc in ipairs(current_project.file_associations) do
+        local pattern = assoc.pattern
+        
+        if pattern:match("%*") then
+            local lua_pattern = "^" .. pattern:gsub("%.", "%%."):gsub("%*", ".*") .. "$"
+            if filename:match(lua_pattern) then
+                return assoc.lang
+            end
+        else
+            if filename == pattern then
+                return assoc.lang
+            end
+        end
+    end
+    
+    return nil
+end
+
 function project.close()
     current_project.loaded = false
     current_project.filepath = nil

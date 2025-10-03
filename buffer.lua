@@ -63,7 +63,16 @@ function buffer.load_file(buf, filepath)
     buf.filepath = filepath
     buf.dirty = false
     buf.original_timestamp = love.filesystem.getInfo(filepath) and love.filesystem.getInfo(filepath).modtime or 0
-    buf.language = detect_language(filepath)
+    
+    local project = require("project")
+    local filename = filepath:match("([^\\/]+)$")
+    local project_lang = project.get_language_for_file(filename)
+    
+    if project_lang then
+        buf.language = project_lang
+    else
+        buf.language = detect_language(filepath)
+    end
     
     syntax.tokenize_buffer(buf)
     
@@ -83,7 +92,16 @@ function buffer.load_file_external(buf, filepath)
     buf.filepath = filepath
     buf.dirty = false
     buf.last_modified = buffer.get_file_mtime(filepath)
-    buf.language = detect_language(filepath)
+    
+    local project = require("project")
+    local filename = filepath:match("([^\\/]+)$")
+    local project_lang = project.get_language_for_file(filename)
+    
+    if project_lang then
+        buf.language = project_lang
+    else
+        buf.language = detect_language(filepath)
+    end
     
     syntax.tokenize_buffer(buf)
     

@@ -8,6 +8,8 @@ A:/Desarrollos/RobloxProjects
 *.exe
 
 [file associations]
+*.lua : lua
+*.luau : lua
 
 [[build commands]]
 build_working_dir: A:/Desarrollos/RobloxProjects
