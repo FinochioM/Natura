@@ -40,6 +40,7 @@ local default_colors = {
     code_attribute = {0.90, 0.49, 0.45, 1.0},       -- E67D74FF
     code_macro = {0.88, 0.68, 0.51, 1.0},           -- E0AD82FF
     code_directive = {0.90, 0.49, 0.45, 1.0},       -- E67D74FF
+    code_label = {0.00, 0.76, 0.73, 1.0},           -- 00C1BBFF
     
     ui_default = {0.75, 0.79, 0.86, 1.0},           -- BFC9DBFF
     ui_dim = {0.53, 0.57, 0.62, 1.0},               -- 87919DFF  

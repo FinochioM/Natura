@@ -39,6 +39,9 @@
     + When I have 2 editors open, the syntax highlighting logic only works on the currently active editor, the other one breaks. FIXED.
     + The cursor_as_block is drawn with empty space in the bottom. It looks like it is not centered.
 
+# Languages
+    batch                                               DONE
+
 # Project system
 
 

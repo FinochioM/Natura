@@ -12,7 +12,7 @@ local preview_active = false
 local preview_buffer = nil
 local preview_editor = nil
 local selected_language = "lua"
-local available_languages = {"lua"} -- Can be extended later
+local available_languages = {"lua", "batch"}
 local selected_language_index = 1
 
 local preview_window = {
@@ -62,7 +62,40 @@ end
 -- Function with multiple return values
 function get_name_age()
     return "Alice", 25
-end]]
+end]],
+
+    batch = [[REM Batch Sample Code
+@echo off
+:: This is a comment
+
+set myvar=Hello World
+set /a counter=5
+
+echo %myvar%
+echo Counter: %counter%
+
+if exist test.txt (
+    echo File exists!
+) else (
+    echo File not found
+)
+
+for %%i in (*.txt) do (
+    echo Processing: %%i
+)
+
+:label_start
+echo At label
+call :subroutine
+goto end
+
+:subroutine
+echo Inside subroutine
+goto :eof
+
+:end
+pause
+exit /b 0]]
 }
 
 function color_preview.find_colors_section_bounds(buf)
@@ -387,7 +420,9 @@ local function draw_highlighted_line(line, x, y, line_num, language)
         
         local color_map = {
             ["keyword"] = "code_keyword",
-            ["string_literal"] = "code_string_literal", 
+            ["command"] = "code_keyword",
+            ["string_literal"] = "code_string_literal",
+            ["string"] = "code_string_literal",
             ["comment"] = "code_comment",
             ["function"] = "code_function",
             ["number"] = "code_number",
@@ -395,6 +430,10 @@ local function draw_highlighted_line(line, x, y, line_num, language)
             ["punctuation"] = "code_punctuation",
             ["operation"] = "code_operation",
             ["default"] = "code_default",
+            ["variable"] = "code_value",
+            ["builtin_variable"] = "code_builtin_variable",
+            ["label"] = "code_label",
+            ["flag"] = "code_type",
             
             ["section_header"] = "config_section_header",
             ["color_key"] = "config_color_key", 

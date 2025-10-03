@@ -944,7 +944,11 @@ function get_color_for_token_type(token_type)
         ["hex_value"] = "config_hex_value",
         ["action_value"] = "config_action_value",
         ["string_value"] = "config_string_value", 
-        ["number_value"] = "config_number_value"
+        ["number_value"] = "config_number_value",
+        ["variable"] = "code_value",
+        ["builtin_variable"] = "code_builtin_variable",
+        ["label"] = "code_label",
+        ["flag"] = "code_type",
     }
     return color_map[token_type] or "code_default"
 end
