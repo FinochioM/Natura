@@ -12,7 +12,7 @@ local preview_active = false
 local preview_buffer = nil
 local preview_editor = nil
 local selected_language = "lua"
-local available_languages = {"lua", "batch"}
+local available_languages = {"lua", "batch", "c"}
 local selected_language_index = 1
 
 local preview_window = {
@@ -95,7 +95,54 @@ goto :eof
 
 :end
 pause
-exit /b 0]]
+exit /b 0]],
+
+    c = [[// C Sample Code
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_SIZE 100
+#define PI 3.14159
+
+// Function declaration
+int fibonacci(int n);
+void print_array(int *arr, size_t len);
+
+typedef struct {
+    int x;
+    int y;
+} Point;
+
+int main(void) {
+    // Variable declarations
+    int num = 42;
+    const char *message = "Hello, World!";
+    float pi = PI;
+    Point p = {10, 20};
+    
+    // Array and pointer
+    int numbers[] = {1, 2, 3, 4, 5};
+    int *ptr = numbers;
+    
+    // Control flow
+    if (num > 0) {
+        printf("Positive: %d\n", num);
+    } else {
+        printf("Non-positive\n");
+    }
+    
+    // Loop
+    for (int i = 0; i < 5; i++) {
+        printf("%d ", fibonacci(i));
+    }
+    
+    return 0;
+}
+
+int fibonacci(int n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}]]
 }
 
 function color_preview.find_colors_section_bounds(buf)
@@ -421,9 +468,15 @@ local function draw_highlighted_line(line, x, y, line_num, language)
         local color_map = {
             ["keyword"] = "code_keyword",
             ["command"] = "code_keyword",
+            ["type"] = "code_type",
+            ["modifier"] = "code_modifier",
+            ["directive"] = "code_directive",
+            ["value"] = "code_value",
             ["string_literal"] = "code_string_literal",
             ["string"] = "code_string_literal",
+            ["char_literal"] = "code_char_literal",
             ["comment"] = "code_comment",
+            ["multiline_comment"] = "code_multiline_comment",
             ["function"] = "code_function",
             ["number"] = "code_number",
             ["identifier"] = "code_identifier",

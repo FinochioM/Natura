@@ -4,6 +4,7 @@ local available_languages = {
     lua = require("langs.lua"),
     config = require("langs.config"),
     batch = require("langs.batch"),
+    c = require("langs.c"),
 }
 
 function langs.get_language_from_extension(extension)
@@ -12,6 +13,12 @@ function langs.get_language_from_extension(extension)
         [".config"] = "config",
         [".bat"] = "batch",
         [".cmd"] = "batch",
+        [".c"] = "c",
+        [".h"] = "c",
+        [".cpp"] = "c",
+        [".hpp"] = "c",
+        [".cc"] = "c",
+        [".cxx"] = "c",
     }
     return lang_map[extension]
 end
